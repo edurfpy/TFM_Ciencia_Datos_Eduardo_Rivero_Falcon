@@ -1,0 +1,2094 @@
+---
+title: "TFM_final"
+author: "Eduardo Rivero Falcón"
+date: "25/11/2020"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1.- CARGA Y ANÁLISIS EXPLORATORIO INICIAL (EDA)
+
+
+## Carga de datos.
+
+
+```{r carga_datos, message=FALSE, warning=FALSE}
+
+# librerías necesarias
+library(ggplot2)
+library(dplyr)
+
+# carga y resumen
+dfHD <- read.csv('./data/health_determ_EU_v0.csv')
+
+str(dfHD)
+
+
+```
+
+Observamos después de la carga que los tipos de variables se corresponden.
+
+
+
+```{r resumen}
+
+# Estadísticas de valores nulos
+colSums(is.na(dfHD))
+
+
+summary(dfHD)
+
+
+```
+
+
+Sin nulos, valores de las categóricas (dimensiones) correctas, rango valores de las numéricas compatible con sus unidades (porcentaje).
+
+
+
+## EDA: Análisis unidimensional
+
+
+```{r librerias_grid, message=FALSE, warning=FALSE}
+
+# librerías para 'bloques'rejilla' de gráficos (grid)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+
+
+```
+
+
+
+### Variables categóricas (dimensiones)
+
+```{r eda_categ}
+
+grid.newpage()
+
+plot.SEX <- ggplot(data = dfHD) + geom_bar(mapping = aes(x = SEX), fill='blue')
+
+plot.AGE <- ggplot(data = dfHD) + geom_bar(mapping = aes(x = AGE),fill='brown')
+
+grid.arrange(plot.SEX,plot.AGE, nrow=2)
+
+
+```
+
+
+El esperado dada la naturaleza (dimensiones) de estas variables. Recordar que por cada país tenemos las mismas combinaciones posibles de los dos géneros y los 5 grupos de edad, luego todas las categorías de cada dimensión tendrán el mismo número de observaciones correspondientes.
+
+
+
+### Variable BMI
+
+
+```{r eda_BMI}
+
+# crear rejilla
+grid.newpage()
+
+
+# bloques rejilla
+plot.bmiund.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = BMI_Underweight), fill='blue',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.bmiund.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = BMI_Underweight), fill='blue',alpha=0.6) + coord_flip()
+
+
+plot.bminorm.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = BMI_Normal), fill='red',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.bminorm.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = BMI_Normal), fill='red',alpha=0.6) + coord_flip()
+
+
+plot.bmiover.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = BMI_Overweight), fill='green',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.bmiover.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = BMI_Overweight), fill='green',alpha=0.6) + coord_flip()
+
+
+# mostrar rejilla
+grid.arrange(plot.bmiund.hist,plot.bmiund.box,plot.bminorm.hist,plot.bminorm.box,
+plot.bmiover.hist,plot.bmiover.box,nrow=3,ncol=2)
+
+
+```
+
+
+Valores bajos en la categoría 'Underweight', con presencia de atípicos por encima del 10% que pueden entrar dentro de la lógica en países del entorno europeo.Valores distribución de sobrepeso (con sesgo a la derecha) algo superiores a los del peso normal, alcanzando valores del 80%
+
+
+
+```{r eda_outl_BMI}
+# resumen numérico boxplot, del que observamos outliers
+boxplot.stats(x=dfHD$BMI_Underweight)
+
+
+```
+
+
+Como hemos comentado los valores atípicos (outliers) que nos encontramos para 'Underweight' no parecen fruto de error sino de valores posibles de la variable para el entorno europeo. 
+
+Para el posterior análisis (odds-ratio de la regresión logística) donde estos outliers pueden constituir ruido que altere los resultados del análisis, decidimos truncar los valores que excedan en un 20% del valor típico extremo (en este caso el máximo) a ese 20% más del valor máximo, conservando así esos valores y su tendencia (valores altos/bajos). Se prefierre esta alternativa a eliminarlos (mejor que eliminarlos) dado el relativo bajo número de observaciones o realizar algún tipo de imputación que altere dicha tendencia.
+
+
+```{r correc_outl_BMI}
+
+# estado anterior
+summary(dfHD$BMI_Underweight)
+
+#corrección
+maximo <- 1.2*boxplot.stats(x=dfHD$BMI_Underweight)$stats[5]
+
+dfHD$BMI_Underweight[dfHD$BMI_Underweight > maximo] <- maximo
+
+
+# estado posterior
+summary(dfHD$BMI_Underweight)
+
+
+```
+
+
+
+### Variables 'smoke'.
+
+
+```{r eda_smoke}
+
+grid.newpage()
+
+
+plot.smkno.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = smoking_Non.smoker), fill='blue',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.smkno.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = smoking_Non.smoker), fill='blue',alpha=0.6) + coord_flip()
+
+
+plot.smkoc.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = smoking_Occasional.smoker), fill='red',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.smkoc.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = smoking_Occasional.smoker), fill='red',alpha=0.6) + coord_flip()
+
+
+plot.smkday.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = smoking_Daily.smoker), fill='green',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.smkday.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = smoking_Daily.smoker), fill='green',alpha=0.6) + coord_flip()
+
+
+
+grid.arrange(plot.smkno.hist,plot.smkno.box,plot.smkoc.hist,plot.smkoc.box,
+plot.smkday.hist,plot.smkday.box,nrow=3,ncol=2)
+
+
+```
+
+
+Valores altos de porcentajes de no fumadores (primer quartil alcanza casi el 70%) frente a valores más pequeños de ocasionales y diarios, si bien en estos últimos se alcanzan valores que alcanzan el 50%. Valores atípicos en bajo número presentes en todas las categorías, no muy distanciados. De nuevo no parecen fruto de errores.
+
+ Por lo tanto aplicaremos el mismo tratamiento de truncar aquellos valores si existiesen que superen en un 20% el valor máximo tìpico. 
+ 
+**NOTA:**Por lo general y a partir de este momento realizaremos siempre esta corrección de outliers, a menos que observemos en los mismos algún posible origen de error y no puedan ser compatibles con una distribución de la población en el ámbito de nuestro estudio. 
+ 
+
+```{r correc_outl_smk}
+
+#  estado anterior
+summary(dfHD$smoking_Non.smoker)
+
+# corrección 'non smoker'
+minimo <- 0.8*boxplot.stats(x=dfHD$smoking_Non.smoker)$stats[1]
+
+dfHD$smoking_Non.smoker[dfHD$smoking_Non.smoker < minimo] <- minimo
+
+# estado posterior
+summary(dfHD$smoking_Non.smoker)
+
+
+# ambos outliers derecha
+colsmk <- c("smoking_Occasional.smoker","smoking_Daily.smoker")
+
+for (col in colsmk){
+  
+  # estado anterior
+  print(summary(dfHD[,col]))
+  
+  # correccion
+  maximo <- 1.2*boxplot.stats(x=dfHD[,col])$stats[5]
+  dfHD[,col][dfHD[,col] > maximo] <- maximo
+  
+  # estado posterior
+  print(summary(dfHD[,col]))
+  print("----------------------------")
+  
+  
+}
+
+
+```
+
+
+
+### Variables 'Physical_activity' y 'Frequent_drink_pct'.
+
+```{r eda_PhysAct_FreqDrink}
+
+grid.newpage()
+
+
+plot.physact.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = Physical_activity), fill='brown',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.physact.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = Physical_activity), fill='brown',alpha=0.6) + coord_flip()
+
+
+plot.freqdrink.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = Frequent_drink_pct), fill='orange',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.freqdrink.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = Frequent_drink_pct), fill='orange',alpha=0.6) + coord_flip()
+
+
+
+grid.arrange(plot.physact.hist,plot.physact.box,plot.freqdrink.hist,plot.freqdrink.box,
+nrow=2,ncol=2)
+
+
+```
+
+
+Valores de la Actividad Física que alcanzan hasta poco más del 60% (tercer quantil algo más de 20)
+Para los Bebedores Frecuentes se alcanza casi el 65% (tercer quartil 30 aprox.). Presencia de valores atípicos a la derecha en ambos, con mayor número y separación para el primero y un solo valor no muy alejado en el segundo.
+
+Se realiza el truncamiento de extremos como en anteriores variables.
+
+
+```{r correc_outl_PhysAct_FreqDrink}
+
+# ambos outliers a la derecha
+colsvar <- c("Physical_activity","Frequent_drink_pct")
+
+for (col in colsvar){
+  
+  # estado anterior
+  print(summary(dfHD[,col]))
+  
+  # correccion
+  maximo <- 1.2*boxplot.stats(x=dfHD[,col])$stats[5]
+  dfHD[,col][dfHD[,col] > maximo] <- maximo
+  
+  # estado posterior
+  print(summary(dfHD[,col]))
+  print("----------------------------")
+  
+  
+}
+
+
+```
+
+
+
+### Variables Consumo diario Frutas y Verduras.
+
+
+```{r eda_FyV}
+
+grid.newpage()
+
+
+plot.fyv0.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = DailyFyV_0.portions), fill='blue',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.fyv0.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = DailyFyV_0.portions), fill='blue',alpha=0.6) + coord_flip()
+
+
+plot.fyv1_4.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = DailyFyV_From.1.to.4.portions), fill='red',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.fyv1_4.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = DailyFyV_From.1.to.4.portions), fill='red',alpha=0.6) + coord_flip()
+
+
+plot.fyv5.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = DailyFyV_5.portions.or.more), fill='green',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.fyv5.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = DailyFyV_5.portions.or.more), fill='green',alpha=0.6) + coord_flip()
+
+
+
+grid.arrange(plot.fyv0.hist,plot.fyv0.box,plot.fyv1_4.hist,plot.fyv1_4.box,
+plot.fyv5.hist,plot.fyv5.box,nrow=3,ncol=2)
+
+
+```
+
+
+Se observan porcentajes considerables de la población que no consumen diariamente frutas y verduras (1er Q por encima de 25, 2do Q 45 aprox.), llegando a casi 70 % en algunos casos. Valores considerables entre los del porcentaje de población que la consume en menor cantidad de la recomendada (1er Q 40, 2do Q 60), hasta poco más de 80 %. Sin atípicos en ambos.
+
+A resaltar valores bajos por lo general para el consumo recomendado de al menos 5 piezas diarias (1er Q 7 aprox, 2do Q algo más de 15), con valores atípicos que llegan ha sobrepasar ligeremante 40.
+
+
+
+```{r correc_outl_DailyFyV}
+
+# estado anterior
+print(summary(dfHD$DailyFyV_5.portions.or.more))
+  
+# correccion  
+maximo <- 1.2*boxplot.stats(x=dfHD$DailyFyV_5.portions.or.more)$stats[5]
+dfHD$DailyFyV_5.portions.or.more[dfHD$DailyFyV_5.portions.or.more > maximo] <- maximo
+  
+# estado posterior
+print(summary(dfHD$DailyFyV_5.portions.or.more))
+
+  
+
+
+```
+
+
+
+### Variables Social Support
+
+
+```{r eda_SocSupport}
+
+grid.newpage()
+
+
+plot.SSptPoor.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = social_support_Poor), fill='blue',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.SSptPoor.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = social_support_Poor), fill='blue',alpha=0.6) + coord_flip()
+
+
+plot.SSptInterm.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = social_support_Intermediate), fill='red',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.SSptInterm.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = social_support_Intermediate), fill='red',alpha=0.6) + coord_flip()
+
+
+plot.SSptStrong.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = social_support_Strong), fill='green',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.SSptStrong.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = social_support_Strong), fill='green',alpha=0.6) + coord_flip()
+
+
+
+grid.arrange(plot.SSptPoor.hist,plot.SSptPoor.box,plot.SSptInterm.hist,plot.SSptInterm.box,
+plot.SSptStrong.hist,plot.SSptStrong.box,nrow=3,ncol=2)
+
+
+```
+
+
+Entre las variables relativas al Soporte Social destacar que los valores para la categoría 'Pobre' son menores a los otros dos, siendo el de 'Intermedio' algo superiores al de 'Fuerte'. Presencia de valores extremos en los dos primeros niveles comentados, escasos y no muy alejados en cualquier caso.
+
+
+```{r correc_outl_socsuppt}
+
+
+# estado anterior 'Poor'
+summary(dfHD$social_support_Poor)
+
+# correccion
+maximo <- 1.2*boxplot.stats(x=dfHD$social_support_Poor)$stats[5]
+
+dfHD$social_support_Poor[dfHD$social_support_Poor > maximo] <- maximo
+
+
+# estado posterior 'Poor'
+summary(dfHD$social_support_Poor)
+
+
+
+# estado anterior 'Intermediate'
+summary(dfHD$social_support_Intermediate)
+
+# correccion
+minimo <- 0.8*boxplot.stats(x=dfHD$social_support_Intermediate)$stats[1]
+
+dfHD$social_support_Intermediate[dfHD$social_support_Intermediate < minimo] <- minimo
+
+# estado posterior 'Intermediate'
+summary(dfHD$social_support_Intermediate)
+
+
+```
+
+
+
+### Variable Severidad dolor físico.
+
+
+```{r eda_SevBdyPain}
+
+grid.newpage()
+
+
+plot.BdyPnNon.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = Sev_body_pain_None), fill='blue',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.BdyPnNon.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = Sev_body_pain_None), fill='blue',alpha=0.6) + coord_flip()
+
+
+plot.BdyPnMild.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = Sev_body_pain_Mild.or.very.mild), fill='red',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.BdyPnMild.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = Sev_body_pain_Mild.or.very.mild), fill='red',alpha=0.6) + coord_flip()
+
+
+plot.BdyPnMod.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = Sev_body_pain_Moderate), fill='green',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.BdyPnMod.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = Sev_body_pain_Moderate), fill='green',alpha=0.6) + coord_flip()
+
+
+plot.BdyPnSev.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = Sev_body_pain_Severe.or.very.severe), fill='brown',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.BdyPnSev.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = Sev_body_pain_Severe.or.very.severe), fill='brown',alpha=0.6) + coord_flip()
+
+
+
+grid.arrange(plot.BdyPnNon.hist,plot.BdyPnNon.box,plot.BdyPnMild.hist,plot.BdyPnMild.box,
+plot.BdyPnMod.hist,plot.BdyPnMod.box,plot.BdyPnSev.hist,plot.BdyPnSev.box,nrow=4,ncol=2)
+
+
+
+```
+
+
+Entre los niveles de dolor, los mayores valores de porcentaje se encuentran en dolor leve o muy leve y ausencia de dolor físico, con medianas respectivas de 27 y 50 aprox., llegando a alcanzar valores alrededor de 50 y 90. Sin valores extremos ambas categorias.
+
+Los porcentajes de nivel moderado son más bajos con mediana cercana a 15, alcanzando valores que sobrepasan 30 y con valores atípicos hasta cerca de los 40. Aun menor los porcentajes para el dolor severo y muy severo. El 3er Q apenas sobrepasa los 10 con valores hasta 20 y atípicos que concentrados la gran mayoría en menos de 30. 
+
+La distribución de los niveles de dolor parece la usual entre una población genérica. 
+
+
+```{r correc_outl_SevBdyPn}
+
+# ambos outliers a la derecha
+colsvar <- c("Sev_body_pain_Moderate","Sev_body_pain_Severe.or.very.severe")
+
+for (col in colsvar){
+  
+  # estado anterior
+  print(summary(dfHD[,col]))
+  
+  # correccion
+  maximo <- 1.2*boxplot.stats(x=dfHD[,col])$stats[5]
+  dfHD[,col][dfHD[,col] > maximo] <- maximo
+  
+  
+  # estado posterior
+  print(summary(dfHD[,col]))
+  print("----------------------------")
+  
+  
+}
+
+
+```
+
+
+
+### Variables Tasa de enfermedad crónica y Gasto sanitario (% del PIB).
+
+
+```{r eda_ChronIll_HlthExpend}
+
+grid.newpage()
+
+
+plot.ChronIll.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = Chron_ill_pct), fill='brown',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.ChronIll.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = Chron_ill_pct), fill='brown',alpha=0.6) + coord_flip()
+
+
+plot.HlthExpend.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = Health_Expend_._GDP), fill='orange',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.HlthExpend.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = Health_Expend_._GDP), fill='orange',alpha=0.6) + coord_flip()
+
+
+
+grid.arrange(plot.ChronIll.hist,plot.ChronIll.box,plot.HlthExpend.hist,plot.HlthExpend.box,
+nrow=2,ncol=2)
+
+
+```
+
+
+Nos encontramos con una tasa de enfermedad crónica con porcentajes extendidos. Con mediana de 25%, 1er Q de 12 y 3er Q de 40 aprox, los máximos alzanzan hasta 80 aprox. Presencia de un atípico testimonial.
+
+En cuanto al gasto sanitario el histograma sin 'picos' locales ni generales se explica debido a que dicho valor no depende de los grupos de edad ni género, son el mismo para todos los grupos de un mismo país.Los valores se reparten desde poco más de 4 hasta el 11.5% del PIB aprox., con 1er Q de casi el 7% y 3er Q de 10. se percibe ligero sesgo a la derecha. Sin valores atípicos.
+
+
+
+```{r correc_outl_ChronIll_HlthExpend}
+
+
+# estado anterior
+summary(dfHD$Chron_ill_pct)
+
+# correccion
+maximo <- 1.2*boxplot.stats(x=dfHD$Chron_ill_pct)$stats[5]
+
+dfHD$Chron_ill_pct[dfHD$Chron_ill_pct > maximo] <- maximo
+
+# estado posterior
+print("Despues:")
+summary(dfHD$Chron_ill_pct)
+
+
+
+```
+
+
+
+### Variables Uso de Medicinas Prescritas y No Prescritas
+
+
+```{r eda_Prescr_NonPrescr_Med}
+
+grid.newpage()
+
+
+plot.PrescrMed.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = presc_med_use_pct), fill='brown',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.PrescrMed.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = presc_med_use_pct), fill='brown',alpha=0.6) + coord_flip()
+
+
+plot.NonPrescrMed.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = non_presc_med_use_pct), fill='orange',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.NonPrescrMed.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = non_presc_med_use_pct), fill='orange',alpha=0.6) + coord_flip()
+
+
+
+grid.arrange(plot.PrescrMed.hist,plot.PrescrMed.box,plot.NonPrescrMed.hist,plot.NonPrescrMed.box,
+nrow=2,ncol=2)
+
+
+```
+
+
+En cuanto al uso de medicinas prescritas y no prescritas se observan 1eros Qs y medianas semejantes (alrededor de 25 y de 37.5 respectivamente), si bien el rango intercuartílico es mayor para la primera. Ambas alcanzan en sus valores máximos cerca de 90, tratándose de valores atípicos en el caso de las no prescritas.
+
+
+```{r correc_outl_NonPrescribMed}
+
+
+# estado anterior
+summary(dfHD$non_presc_med_use_pct)
+
+#correccion
+maximo <- 1.2*boxplot.stats(x=dfHD$non_presc_med_use_pct)$stats[5]
+
+dfHD$non_presc_med_use_pct[dfHD$non_presc_med_use_pct > maximo] <- maximo
+
+
+# estado posterior
+summary(dfHD$non_presc_med_use_pct)
+
+
+
+```
+
+
+
+
+### Variable objetivo: SPH Good or Very Good
+
+
+```{r eda_SPH+}
+
+grid.newpage()
+
+
+plot.SPH.hist <- ggplot(data = dfHD) +
+  geom_histogram(mapping = aes(x = SPH_G_or_VG_pct), fill='blue',alpha=0.6,binwidth = 1) +
+  labs(y='freq')
+plot.SPH.box <- ggplot(data = dfHD) +
+  geom_boxplot(mapping = aes(y = SPH_G_or_VG_pct), fill='blue',alpha=0.6) + coord_flip()
+
+
+grid.arrange(plot.SPH.hist,plot.SPH.box,nrow=2,ncol=1)
+
+
+```
+
+
+En primer lugar los diagramas muestran una distribución de valores por encima del 50% la gran mayoría, con 1er Q de 59.5 y mediana de 80.1 (media 71.4, del resumen estadístico inicial). Valores máximos llegan casi a al centena. Se observa por lo tanto una clara tendencia a valorar positivamente el estado de salud.
+
+En el caso de la variable objetivo lo que nos ocupa es decidir el valor umbral (threshold) a la hora de convertir esta variable (porcentajes) en la dicotómica necesaria para el posterior análisis aplicando regresión logística, y para proseguir con el EDA bidimensional (correspondencia de las variables con los valores de la variable objetivo dicotomizada).
+
+Hay que tener en cuenta que para calificar en un bloque de población (país/género/grupo_edad, delimitado por los valores de esas columnas/dimensiones) la percepción positiva o muy positiva  como característica o predominante de dicho grupo, no valdrían valores del 50% o ligeramente superiores (¿que pasa con la otra mitad?). Incluso valores cecanos al 60% podrían ser discutibles. Se toma finalmente, apollada además por la distribución vista con sesgo claro a la derecha, como valor umbral el 65, a falta de ver los resultados del análisis.
+
+Veamos la dsitribución en porcentaje de la nueva variable objetivo:
+
+
+
+```{r variable_SPHpos}
+
+# creación nueva variable objetivo a partir del umbral
+dfHD$SPHpos <- ifelse(dfHD$SPH_G_or_VG_pct>=65,1,0)
+
+# tabla distribucion porcentaje
+prop.table(table(dfHD$SPHpos))*100
+
+
+```
+
+
+A continuación ordenamos los niveles (levels) de la variable AGE para una mejor presentación y disposición en el EDA bidimensional, tipificamos como categórica la nueva variable objetivo (dicotimizada) y eliminamos la antigua (porcentajes):
+
+
+
+```{r dataset_analisis}
+
+# reordenar AGE
+dfHD$AGE <- factor(dfHD$AGE, levels=c("From 15 to 24 years", "From 25 to 34 years", "From 35 to 44 years", "From 45 to 64 years", "65 years or over"), ordered=TRUE)
+
+# target como factor
+dfHD$SPHpos <- as.factor(dfHD$SPHpos)
+
+# dataset con la variable target dicotomizada
+dfHDreg <- dfHD %>% select(-SPH_G_or_VG_pct)
+
+str(dfHDreg)
+
+summary(dfHDreg)
+
+
+```
+
+
+
+
+
+## EDA: Análisis bidimensional, Correlación de las variables numéricas.
+
+
+Vamos en primer lugar a comprobar las correlaciones existentes entre las variables numéricas. La presencia de correlación en estas variables influye negativamente en el resultado de la regresión y da lugar a valores erróneos de los coeficientes y odds-ratio.
+
+Realizamos entonces el estudio de la correlación entre estas variables y el de la significación estadística de las mismas.
+
+
+
+```{r libr_correlacion, message=FALSE, warning=FALSE}
+
+# librerías necesarias correlación
+library(Hmisc)
+library(corrplot)
+
+
+```
+
+
+
+```{r correlacion_var_numericas}
+
+# separamos variables cuantitativas
+var.numericas.HD <- dfHDreg %>% select(-GEO,-SEX, -AGE, -SPHpos)
+
+# correlación con prueba de significancia estadistica
+rcorr(as.matrix(var.numericas.HD))
+
+
+```
+
+
+
+Iremos nombrando a continuación las variables correladas (alto valor del coeficiente) que se hayan comprobado estadísticamente significativas, y las medidas que hemos decidido tomar.
+
+
+### Variables BMI.
+
+Las 3 variables relativas a BMI (Underweight, Normal y Overweight) están correladas, con valores de 0.78 a -0.99. Por interés a la hora de su influencia y determinación en el estado de salud conservamos la de sobrepeso y eliminamos las 2 restantes.
+
+
+
+### Variables Consumo diario de Frutas y Verduras.
+
+Hay correlación entre la de '0_portions' y la de '1 to 4 portions' (-0.82). Para eliminar esta situación decidimos eliminar la primera (cero porciones) y renombrar la segunda a 'Less_5_portions'. De esta forma aún conservamos información sobre el consumo recomendado (5 porciones o más diarias) y el menor al recomendado.
+
+
+
+### Variables Consumo de tabaco.
+
+Existe correlación entre las variables 'Non smoker' y 'Daily smoker' (-0.96). En este caso por mayor interés en estudiar su importancia eliminaremos la primera, manteniendo la segunda junto con la otra existente de 'Ocasional smoker'.
+
+
+
+### Variables Soporte Social.
+
+En este caso la decisión se nos presenta más difícil. Existe correlación entre 'Strong' e 'Intermediate' (-0.90) y entre 'Strong' y 'Poor' (-0.88). Decidimos eliminar la variable 'Strong'. Quedan pues los niveles "Pobre" y "Medio", este último con su significado original de no del todo satisfactorio, con interés y creemos suficientes para el estudio de la influencia del soporte social.
+
+
+
+### Interacciones entre las variables Tasa de Enfermedad Cronica, las relativas a Dolor Corporal y las de Uso de medicinas prescritas.
+
+Estamos ante una situación donde se ven afectadas bastantes variables. 
+
+Por un lado la variable de Tasa de Enfermedad crónica (de gran interés para el estudio) está correlacionada con todas las relativas a dolor corporal excepto la de dolor leve, con valores de 0.73 a 0.80. Esta relación por otro lado tampoco resulta una gran sorpresa.
+
+Por otro lado, también encontramos correlación entre otra variable, el Uso de Medicinas Prescribidas y 3 de las relativas a Dolor Corporal (-0.73 a 0.77, de nuevo exeptuando Dolor Leve).
+
+A todo lo anterior se suman las correlaciones existentes de por sí entre las variables relativas al Dolor Corporal, 'Ningún dolor' con las 3 restantes (-0.74 a -0.88) y entre 'Severo' y 'Moderado' (0.77)
+
+Dada entonces esta situación junto con la condición de que es usual que las enfermedades crónicas manifiesten algún tipo de dolor, se decide eliminar todas las variables relativas a Dolor Corporal (dado su poco interés eliminamos también la de dolor leve).
+
+Existe también alta correlación entre Enfermedad Crónica y Uso de medicinas prescribidas (0.89). Siendo una decisión difícil por querer mantenerla en el estudio, pero dada según nuestra opinión la mayor importancia de estudiar los efectos de la Enfermedad Crónica, y dado también que todavía quedaría la variable relativa a Medicinas No Prescribidas, con todo lo anterior decidimos eliminar la variable Uso de Medicinas Prescribidas.
+
+
+
+Procedemos entonces a realizar las operaciones descritas y formar el nuevo dataset.
+
+
+### Operaciones necesarias para eliminar correlaciones
+
+
+```{r corr_rename_variable}
+
+# para renombrar columna 'rename'
+
+dfHDreg <- rename(dfHDreg, DailyFyV_Less.5.portions. = DailyFyV_From.1.to.4.portions)
+
+colnames(dfHDreg)
+
+str(dfHDreg)
+
+
+```
+
+
+
+
+
+
+```{r corr_select_variables}
+
+# para eliminar las mencionadas y disponer por orden las restantes utilizamos 'select'
+
+dfHDreg.corr <- dfHDreg %>%
+  select(GEO,SEX,AGE,BMI_Overweight,Physical_activity,DailyFyV_Less.5.portions.,DailyFyV_5.portions.or.more,smoking_Occasional.smoker,smoking_Daily.smoker,Frequent_drink_pct,social_support_Poor,social_support_Intermediate,Chron_ill_pct,Health_Expend_._GDP,non_presc_med_use_pct,SPHpos)
+
+
+# resumen dataset final sin las variables correladas
+str(dfHDreg.corr)
+
+summary(dfHDreg.corr)
+
+
+```
+
+
+
+
+## Análisis bidimensional.
+
+
+### Variables BMI_Overweight y Physical Activity
+
+
+```{r eda_bidim_bmi_physact}
+
+grid.newpage()
+
+plt.bidim.bmi <- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = BMI_Overweight)) + geom_boxplot(fill='blue')
+
+plt.bidim.physact <- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = Physical_activity)) + geom_boxplot(fill='green')
+
+
+grid.arrange(plt.bidim.bmi,plt.bidim.physact,nrow=1,ncol=2)
+
+
+```
+
+
+Se observa una clara diferencia entre los grupos que se corresponden con SPH bajo, que presentan mayor porcentaje de población con sobrepeso, y los de valoración del SPH positiva con menores valores de porcentaje en su distribución. Aún con cierto solapamiento se pueden percibir el porcentaje de sobrepeso como posible elemento de influencia.
+
+En cuanto a la actividad física los grupos de valoración positiva presentan porcentajes de población mayores en su distribución, si bien en este caso el solapamiento es más acusado. Habrá que verificar su relevancia en el análisis posterior.
+
+Estas relaciones entran dentro de lo esperable, hacer ejercicio y mantener un peso adecuado parecen mejorar la autopercepción de salud.
+
+
+
+
+### Variables relativas al Consumo Diario de Frutas y Verduras.
+
+
+```{r eda_bidim_DailyFyV}
+
+grid.newpage()
+
+plt.bidim.FyVless5 <- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = DailyFyV_Less.5.portions.)) + geom_boxplot(fill='red')
+
+plt.bidim.FyV5more <- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = DailyFyV_5.portions.or.more)) + geom_boxplot(fill='yellow')
+
+
+grid.arrange(plt.bidim.FyVless5,plt.bidim.FyV5more,nrow=1,ncol=2)
+
+
+```
+
+
+
+En cuanto al consumo diario de frutas y verduras, parece no haber prácticamente diferencias en las distribuciones de valores (porcentajes) en función de la SPH para aquellos grupos donde el consumo es el recomendado (5 raciones o más, variable 'DailyFyV_5.portions.or.more'). Para los de consumo menor se observa una pequeña diferencia, con ligeramente mayores valores porcentuales los de SPH negativa. 
+
+Estudiados las distribuciones por separado y debido al solapamiento en las distribuciones, habrá que esperar al análisis junto con el resto de las variables.
+
+
+
+
+### Variables relativas al Consumo de Tabaco.
+
+
+```{r eda_bidim_Tabaco}
+
+grid.newpage()
+
+plt.bidim.smkocas <- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = smoking_Occasional.smoker)) + geom_boxplot(fill='brown')
+
+plt.bidim.smkday <- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = smoking_Daily.smoker)) + geom_boxplot(fill='orange')
+
+
+grid.arrange(plt.bidim.smkocas,plt.bidim.smkday,nrow=1,ncol=2)
+
+
+```
+
+
+En cuanto al consumo de tabaco observamos con sorpresa para ambas variables una correspondencia entre valores mayores de porcentaje de población consumidora y valoración positiva del SPH, existiendo mayor solapamiento de las distribuciones en el caso de fumador diario.
+
+El carácter de "auto percibido" de la variable objetivo puede relativizar esta aparente contradicción. A pesar de la certeza del perjuicio de consumo y de las campañas de sensibilización existentes, la propia población fumadora no paraece valorarla como factor negativo para su estado de salud.
+
+Parecería tener mayor influencia la variable de Fumadores Ocasionales. Deberemos esperar a la fase de análisis.
+
+
+
+### Variables relativas al Apoyo Social del entorno.
+
+
+```{r eda_bidim_SocSuppt}
+
+grid.newpage()
+
+plt.bidim.SocSupPoor <- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = social_support_Poor)) + geom_boxplot(fill='magenta')
+
+plt.bidim.SocSupInt <- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = social_support_Intermediate)) + geom_boxplot(fill='cyan')
+
+
+grid.arrange(plt.bidim.SocSupPoor,plt.bidim.SocSupInt,nrow=1,ncol=2)
+
+
+```
+
+
+
+Vemos en estas gráficas primero que los valores mayores porcentuales de Apoyo Social Pobre se asocian más con una percepción negativa del estado de salud, con una perceptible diferencia (aún con cierto solapamiento) entre las distribuciones de porcentajes. Para el caso de Apoyo Intermedio nos encontramos con distribuciones respecto a la SPH más similares (diferencia acaso de 5 puntos porcentuales en sus máximos).
+
+Como factor parece entonces que el soporte social pobre podría ser determinante, habrá que corroborar la influencia o no en el análisis.
+
+
+
+
+### Variables Tasa de Enfermedad Crónica y Uso de Medicinas No Prescribidas.
+
+
+```{r eda_bidim_ChronIll_NonPrescrMed}
+
+grid.newpage()
+
+plt.bidim.ChronIll<- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = Chron_ill_pct)) + geom_boxplot(fill='red')
+
+plt.bidim.NonPrescrMed <- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = non_presc_med_use_pct)) + geom_boxplot(fill='blue')
+
+
+grid.arrange(plt.bidim.ChronIll,plt.bidim.NonPrescrMed,nrow=1,ncol=2)
+
+
+```
+
+
+Se observa una por otro lado del todo esperable clara diferencia en las distribuciones de porcentaje para la Tasa de Enfermedad Crónica, con valores mayores de porcentaje de población con tal condición relacionado con SPH negativa y relativamente poco solapamiento entre ambas. Es entonces una candidata clara a factor determinante, a la espera de los resultados del análisis.
+
+En cuanto al uso de medicinas no prescribidas, no existen grandes diferencias en las distribuciones, acaso estando más concentrada la de SPH positiva. Duda sobre su influencia, a la espera del análisis.
+
+
+
+### Variables Gasto Sanitario y Tasa consumidores habituales de alcohol.
+
+
+```{r eda_bidim_HlthExpend_FreqDrink}
+
+grid.newpage()
+
+plt.bidim.HlthExpend<- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = Health_Expend_._GDP)) + geom_boxplot(fill='green')
+
+plt.bidim.FreqDrink <- ggplot(data = dfHDreg.corr, mapping = aes(x = SPHpos, y = Frequent_drink_pct)) + geom_boxplot(fill='orange')
+
+
+grid.arrange(plt.bidim.HlthExpend,plt.bidim.FreqDrink,nrow=1,ncol=2)
+
+
+```
+
+
+
+Dentro del rango pequeño de valores en el que se mueve el gasto sanitario (en % del PIB), se distingue una pequeña diferencia en las distribuciones para cada valor de SPH, siendo mayores los porcentajes de gasto entre los de  valoración positiva.  Dada la situación de pequeña diferencia en un contexto de rango corto de valores, podría aventurarse compo posible que un mayor gasto en sanidad influya aún en forma ligeramente favorable, a falta de confirmarse en le análisis.
+
+En cuanto a la Tasa de Bebedores Habituales, con cierto solapamiento en las distribuciones de valores, se observa al contrario de lo que en un principio se pudiera suponer que mayores porcentajes de poblacion bebedora habitual se asocian con SPH positiva. De nuevo aquí al igual que indicamos para el consumo de tabaco recordar el concepto de "auto percibida" de la variable objetivo, y la no valoración como negativa del consumo por parte de los bebedores frecuentes.
+
+
+
+
+### Relación de la SPH con las variables AGE y SEX (categóricas, dimensiones).
+
+
+```{r eda_bidim_SPH_AGE_SEX_separado}
+
+grid.newpage()
+
+plt.bidim.SPH_SEX<- ggplot(data=dfHDreg.corr,aes(x=SEX,fill=SPHpos))+geom_bar(position="fill")+ylab("Proporcion")
+
+plt.bidim.SPH_AGE<- ggplot(data=dfHDreg.corr,aes(x=AGE,fill=SPHpos))+geom_bar(position="fill")+ylab("Proporcion") + theme(axis.text.x = element_text(angle = 90))
+
+
+grid.arrange(plt.bidim.SPH_SEX,plt.bidim.SPH_AGE,nrow=1,ncol=2)
+
+
+```
+
+
+En primer lugar vemos que el género no parece determinante a la hora de diferenciar entre valoración positiva y negativa de salud, con proporciones similares entre hombres y mujeres (cerca del 75%, casi tres cuartas partes valoración positiva SPH)
+
+En cuanto a los grupos de edad observamos hasta los 34 años la práctica ausencia de población que manifieste SPH negativa. Ésta aparece a partir de esos 35 años, aumentando en cada uno de los 3 grupos restantes con el aumento de edad. La franja entre 45 y 64 alcanza el 50% aproximadamente y en la tercera edad (65 o más) la valoración negativa es mayoritaria, sobre el 90%. Vemos pues una tendencia clara a valorar peor el estado de salud en los últimos intervalos de edad, previa a la tercera edad y en ella misma.
+
+
+Veamos ahora la interacción entre las dos dimensiones.
+
+
+
+```{r eda_bidim_SPH_AGE_SEX_cjto}
+
+ggplot(data = dfHDreg.corr,aes(x=SEX,fill=SPHpos))+geom_bar(position="fill")+
+  facet_wrap(~AGE)+ylab("Proporcion")
+
+
+```
+
+
+No se observa diferencia en las proporciones por sexo en todos los grupos de edad, con valores prácticamente idénticos. 
+
+En un principio y a falta de los resultados del análisis con el resto de variables, parece que el género tiene menor influencia mientras que la edad si pudiera ser determinante. 
+
+
+
+
+### Guardado del dataset para la visualización en Tableau (dataset descriptivo).
+
+
+```{r dtatset_visualiz_TABLEAU_dataset_descriptivo}
+
+# NOTA: para la visualización en Tableau se decide añadir al dataset del análisis el valor de SPH # original (como porcentaje) por descriptivo, aparte del dicotomizado para la regresión logística
+
+dfHDVisualiz <- dfHDreg.corr
+dfHDVisualiz$SPH_pctg <- dfHD$SPH_G_or_VG_pct
+str(dfHDVisualiz)
+
+write.csv(dfHDVisualiz,file = "./data/Hlth_Determ_EU_Vis_Tableau.csv", row.names = FALSE)
+
+
+```
+
+
+
+# 2.- ANÁLISIS DE LA INFLUENCIA DE LAS DISTINTAS VARIABLES. REGRESIÓN LOGÍSTICA, VALORACIÓN ODDS-RATIO.
+
+
+## División del dataset en los conjuntos de entrenamiento y de test.
+
+
+Realizamos primero la partición en los conjuntos train y test.
+
+
+
+```{r libr_particion_train_test, message=FALSE, warning=FALSE}
+
+# librería necesaria partición TRAIN-TEST
+library(caret)
+
+
+```
+
+
+La función 'createDataPartition' permite hacer una partición estratificada, conservando los dos conjuntos resultantes TRAIN y TEST proporciones similares en cuanto a la variable objetivo (SPHpos) a la del conjunto en original.
+
+
+```{r particion_train_test}
+
+set.seed(42)
+
+# Se crean los índices de las observaciones de entrenamiento
+
+train.index <- createDataPartition(y = dfHDreg.corr$SPHpos, p = 0.8, list = FALSE, times = 1)
+
+# creacion de los conjuntos
+dfHD_train <- dfHDreg.corr[train.index, ]
+dfHD_test  <- dfHDreg.corr[-train.index, ]
+
+
+# revisamos tamaño de cada conjunto y proporciones variable target SPHpos
+
+print("Dimensiones conjunto TRAIN:")
+dim(dfHD_train)
+
+print("Dimensiones conjunto TEST:")
+dim(dfHD_test)
+
+
+print("Proporción variable objetivo en dataset original:")
+print(prop.table(table(dfHDreg.corr$SPHpos)))
+
+
+print("Proporción variable objetivo en conjunto TRAIN:")
+print(prop.table(table(dfHD_train$SPHpos)))
+
+
+print("Proporción variable objetivo en conjunto TEST:")
+print(prop.table(table(dfHD_test$SPHpos)))
+
+
+
+```
+
+
+Como vemos las proporciones de valores de la variable objetivo se conservan en ambos conjuntos.
+
+
+
+## Estudio general en el ámbito europeo de los factores determinantes del estado de salud.Regresión logística SPHpos. Búsqueda del mejor modelo explicativo.
+
+
+Primero debemos establecer los niveles de referencia para las variables explicativas categóricas. Para ello la variable AGE, cuyos niveles ordenamos para una mejor presentación en las gráficas del EDA, lo convertimos previamente en factor no ordenado.
+
+Dado el ámbito global europeo de nuestro estudio de los factores determinantes de salud y para obtener conclusiones en conjunto, no haremos distinción por país. Hay que tener en cuenta además que debido al elevado número de países (31), se elevaría el número de variables para la regresión en un dataset ya con relativamente pocas observaciones, y dado que las diferencias entre países ya se mostrarán en posterior análisis PCA y clusterización, eliminamos del análisis la variable GEO.
+
+
+
+```{r relevel_categóricas_no_ordenadas}
+
+# nuevas variables estableciendo los niveles de referencia de las categóricas no ordenadas
+# (necesario antes de la regresión logística)
+
+dfHD_train$AGE <- factor(dfHD_train$AGE, ordered = FALSE)
+
+dfHD_train$AGE_R <- relevel(dfHD_train$AGE, ref = "From 15 to 24 years")
+dfHD_train$SEX_R <- relevel(dfHD_train$SEX, ref = "Males")
+
+
+
+# eliminamos las originales (para evitar confusiones) y GEO 
+
+dfHD_train <- dfHD_train %>% dplyr::select(-GEO,-SEX,-AGE)
+
+str(dfHD_train)
+
+
+```
+
+
+Llevamos a cabo la regresión logística:
+
+
+```{r libr_stepwise, message=FALSE, warning=FALSE}
+
+# libreria necesaria mejor modelo (selección de variables) "stepwise"
+library(MASS)
+
+
+```
+
+
+En la búsqueda del mejor modelo (según criterio de información AIC) y las variables con influencia estadísticamente significativa, partiendo del modelo completo con todas las variables explicativas realizaremos mos un proceso de selección de variables del modelo ('stepwise') 'backward', en ambas direcciones 'both' y 'forward'.
+
+
+Probamos refinamiento con dirección 'backward'
+
+
+
+```{r mod_logist_stepwise_backward}
+
+# stepwise backward
+mod.logist.completo <- glm(SPHpos ~ ., data = dfHD_train, family = binomial)
+
+mod.stepwise.backward <- stepAIC(mod.logist.completo, direction = "backward", trace = TRUE)
+
+
+# resumen mejor modelo alcanzado
+summary(mod.stepwise.backward)
+
+
+```
+
+
+**NOTA:** se hicieron pruebas siguiendo la traza con modelos de valores de AIC algo mayores pero cercanos, para ver si podíamos incluir más variables estadísticamente significativas, sin éxito.
+
+
+
+A continuación en ambas direcciones:
+
+
+
+```{r mod_logist_stepwise_both}
+
+
+mod.stepwise.both <- stepAIC(mod.logist.completo, direction = "both", trace = TRUE)
+
+summary(mod.stepwise.both)
+
+
+```
+
+
+Llegamos al mismo mejor modelo que el anterior, con los mismos valores para los coeficientes y su significancia. De nuevo probamos con modelos de la traza sin éxito.
+
+
+
+Probamos la última posibilidad, dirección del refinamiento 'forward':
+
+
+
+```{r mod_logist_stepwise_forward}
+
+# parte del modelo 'vacio' (solo una constante)
+mod.logist.cero <- glm(SPHpos ~ 1, data = dfHD_train, family = binomial)
+
+mod.stepwise.forward <- stepAIC(mod.logist.cero, direction = "forward", trace = TRUE)
+
+summary(mod.stepwise.forward)
+
+
+```
+
+Sin resultados.
+
+
+
+Nos quedamos pues con el mejor modelo, el mismo encontrado para las direcciones de selección 'backward' y 'both'.
+
+
+```{r resumen_mejor_modelo_final}
+
+summary(mod.stepwise.both)
+
+
+```
+
+
+
+### Validación del modelo.
+
+
+
+#### Devianza
+
+ En primer lugar para comprobar la bondad del ajuste del modelo logístico utilizamos como indicador usual la devianza, que se define como menos el doble del logaritmo de la razón de verosimilitud (log-likelihood), es decir, devianza=−2× log-likelihood y se representa como -2LL.
+
+La devianza tiene una distribución χ2 y compara los valores de la predicción observados en dos momentos:
+
+- El modelo sin variables independientes, sólo con la constante (modelo referencia).
+- El modelo con las variables predictoras introducidas.
+
+
+Simplemente de los valores devueltos en el resumen de nuestro modelo tomamos la devianza del modelo referencia (valor 'Null deviance')  y le restamos la devianza del nuevo modelo (valor 'Residual Deviance'). Estos valores son accesibles desde la propia variable donde almacenamos nuestro modelo.
+
+Esta diferencia se lo conoce como "likelihood-ratio" y tiene una distribución χ2 con k-1 grados de libertad, el número de parámetros del nuevo modelo, menos el número de parámetros del modelo referencia que es siempre 1.
+
+Para calcular la probabilidad asociada al estadístico chi-cuadrado utilizamos la función pchisq(Chi, gl), cuyos argumentos son el estadístico chi-cuadrado y sus grados de libertad. La probabilidad que queremos es 1 menos el valor de la función pchisq().
+
+
+
+```{r bondad_devianza_chisq}
+
+# estadístico chi-cuadrado
+estad.chi <- mod.stepwise.both$null.deviance - mod.stepwise.both$deviance
+
+# grados de libertad
+grad.lib.chi <- mod.stepwise.both$df.null - mod.stepwise.both$df.residual
+
+# p-valor
+p_valor <- 1 - pchisq(estad.chi, grad.lib.chi)
+
+p_valor
+
+
+```
+
+
+ La probabilidad es menor que 0.05, por lo tanto podemos afirmar que el modelo en conjunto es significativo.
+
+
+
+
+#### Multicolinealidad.
+
+
+Verificaremos la posible existencia de multicolinealidad, que afectaría gravemente a la interpretación de los resultados de la regresión, con el cálculo del factor de inflacción de la varianza de todas las variables independientes:
+
+
+```{r libr_multicolinealidad, message=FALSE, warning=FALSE}
+
+# librería necesaria función 'vif()'
+
+library(car)
+
+
+```
+
+
+```{r vif_modelo_stew_both}
+
+# cálculo del factor de inflacción de la varianza de todas las variables independientes
+
+vif(mod.stepwise.both)
+
+
+
+```
+
+
+El valor mínimo de VIF es 1, se suelen tomar como umbral máximo indicador de multicolinealidad el valor 10, aunque en algunos estudios ya toman por encima de 5 como indicador posible de multicolinealidad. En nuestro caso todos los valores se situan por debajo de ambos umbrales, luego podemos en este aspecto dar nuestro modelo como válido.
+
+
+
+
+#### Métricas de clasificación.
+
+
+ A continuación analizaremos las métricas usuales de clasificación (SPHpos '0' o '1').Para ello debemos antes que nada realizar sobre el conjunto TEST las mismas operaciones de preparación que realizamos en cuanto a las variables categóricas para el conjunto TRAIN:
+
+
+```{r relevel_categóricas_no_ordenadas_TEST}
+
+# nuevas variables estableciendo los niveles de referencia de las categóricas no ordenadas
+# (necesario antes de la regresión logística)
+
+dfHD_test$AGE <- factor(dfHD_test$AGE, ordered = FALSE)
+
+dfHD_test$AGE_R <- relevel(dfHD_test$AGE, ref = "From 15 to 24 years")
+dfHD_test$SEX_R <- relevel(dfHD_test$SEX, ref = "Males")
+
+
+# eliminamos las originales (para evitar confusiones) y GEO 
+
+dfHD_test <- dfHD_test %>% dplyr::select(-GEO,-SEX,-AGE)
+
+str(dfHD_test)
+
+
+```
+
+
+ Pasamos ahora al cálculo de la matriz de confusión y principales métricas de bondad del ajuste (clasificación) que se derivan de ella. Para ello realizamos las predicciones de nuestro modelo con los datos del conjunto TEST y nos valemos de la función 'confusionMatrix' del paquete 'caret', que realiza dichos cálculos proporcionando nosotros los valores reales del SPH.
+
+
+
+```{r matriz_confusion}
+
+predicciones <- round(predict(mod.stepwise.both, newdata = dfHD_test, type = "response"))
+
+confusionMatrix(data = as.factor(predicciones), reference = dfHD_test$SPHpos, positive = "1", 
+                dnn = c("observaciones","predicciones"), mode = "prec_recall")
+
+
+```
+ 
+ 
+
+ En la matriz de confusión podemos observar solo 5 clasificaciones erroneas de entre las 61 observaciones totales del conjunto TEST.
+ 
+ Como vemos nuestro modelo alcanza buenos valores tanto del primer objetivo de precisión ('accuracy', 91.8%) como de entre otros los valores 'precision', 'recall' y 'f1', usuales métricas de clasificación, todas por encima del 93%.
+
+ Para terminar con la validación del modelo dibujamos la curva ROC correspondiente a nuestro modelo y calculamos el área bajo esa curva.
+
+
+
+```{r libr_ROC, message=FALSE, warning=FALSE}
+
+# libreria necesaria cálculo ROC
+library(ROCR)
+
+
+```
+
+
+
+```{r dibujo_curva_ROC}
+
+# función 'prediction' de lamisma librería, necesaria para la grafica
+predicciones.ROCR = prediction(predicciones, dfHD_test$SPHpos)
+
+# cálculo ROC
+ROCR.Perf = performance(predicciones.ROCR, "tpr", "fpr")
+
+# dbujo gráfica
+plot(ROCR.Perf, colorize = TRUE)
+
+
+
+
+```
+
+
+
+
+```{r valor_AUC}
+
+# función performance de la misma librería
+auc = as.numeric(performance(predicciones.ROCR,"auc")@y.values)
+
+# Valor AUC
+print(auc)
+
+
+```
+
+
+
+ Como se puede comprobar con la curva ROC cercana a la esquina superior izquierda y el valor alto del AUC, se corrobora nuestro modelo como bastante bueno, con lo cual podemos pasar a la evaluación de los odds-ratio.
+
+
+
+
+## Evaluación de los factores determinantes: valoración de los odds-ratio.
+
+
+Comprobada la bondad de nuestro modelo, obtenemos a partir de los coeficientes de ajuste los odds-ratio de la variables determinantes (con significancia estadística).
+
+Debemos comentar que, con un nivel de significancia del 10% (0.1), recuperamos también la variable 'BMI_Overweight' por sobrepasar el valor de significancia por muy poco (0.1001) y dada su relevancia para el análisis.
+
+Mostramos pues finalmente las odds-ratio de las variables determinantes (significancia estadística) con sus intervalos de confianza, y pasamos a su evaluación. Es necesario recordar que las unidades de estas variables son porcentajes, sobre el PIB para la variable 'Gasto sanitario' y para el resto porcentaje de población que cumple o se encuentra en la situación que indica el nombre de la variable.
+
+
+
+
+```{r odds_ratio_var_determinantes}
+
+# resumen mejor modelo
+summary(mod.stepwise.both)
+
+# calculo odds-ratio e intervalos de confianza a partir de los resultados del modelo
+
+print("Odds-ratio variables determinantes (significancia estadística):")
+
+odds.ratio <- exp(coefficients(mod.stepwise.both))
+
+var.determ <- c("BMI_Overweight","DailyFyV_5.portions.or.more","smoking_Occasional.smoker",
+                "social_support_Poor","Chron_ill_pct","Health_Expend_._GDP","SEX_RFemales")
+
+conf.int <- exp(confint(mod.stepwise.both, level = 0.90))
+
+
+# odds-ratio e intervalos de confianza para las variables estadísticamente significativas
+print(odds.ratio[var.determ])
+print(conf.int[var.determ,])
+
+
+
+```
+
+
+  Como vemos las variables que afectan negativamente a la SPHpos (oods-ratio inferior a la unidad) son 'BMI_Overweight', 'social_support_Poor', 'Chron_ill_pct' y 'SEX_RFemales' (en referencia al género masculino)
+
+ Las que afectan en forma positiva (oods-ratio mayor que la unidad) son 'DailyFyV_5.portions.or.more', 'Health_Expend_._GDP' y sorpresivamente 'smoking_Occasional.smoker'
+ 
+ El resto de las variables con las que partíamos han sido eliminadas en el proceso de refinamiento (stepwise-both) por no ser influyentes (no estadísticamente significativas).
+ 
+ Pasamos a comentar cada una de ellas:
+
+
+### BMI_Overweight
+
+ Como vemos por su odds-ratio (0.9415) el sobrepeso afecta negativamente a la autovaloración del estado de salud (SPHpos). El valor nos indica que por cada aumento en la variable independiente de un punto porcentual la probabilidad de tener valoración positiva se multiplica por 0.94, es decir baja casi un 6% respecto a la anterior del aumento del punto porcentual.
+ 
+ Entre los factores negativos es el que influye de forma más leve.
+ 
+
+
+### DailyFyV_5.portions.or.more
+
+ Tiene un odds-ratio de 1.0906. Por lo tanto tomar al menos la dosis diaria recomendada de frutas y verduras es positivo para la autovaloración del estado de salud, si bien la influencia es de grado leve.
+ 
+ Por cada aumento de un punto porcentual en el consumo la probabilidad de tener valoración positiva aumenta casi en un 9.06% respecto a antes del aumento.
+ 
+
+
+### smoking_Occasional.smoker
+
+ Con un odds-ratio de 1.6583, nos indica para nuestra sorpresa que tal condición (porcentaje de población con ésta) es un factor positivo para la autovaloración del estado de salud. Situando este dato en su contexto debemos recordar que ya en el análisis exploratorio, y tanto para los fumadores ocasionales como los diarios, los valores más altos de porcentaje fumadora se encontraban en la distribución de los que referian valoración positiva de salud.
+ 
+ Dado el carácter de 'autopercibida' del estado de salud de la SPH, junto con lo anterior comentado y dado el comprobado perjuicio sobre la salud del tabaco, todo esto podría indicar una mala o deficiente percepción por parte de la población fumadora (no achacable a la falta de información, presente de sobra) del perjuicio de su consumo.
+ 
+ Cada aumento de un punto porcentual de población fumadora ocasional multiplica la probabilidad de tener valoración positiva por 1.66 respecto a antes del aumento. Aumento que se pudiera considerar de excesivo y que situamos dentro del contexto explicado anteriormente.
+
+
+
+### social_support_Poor
+
+ En este caso tenemos un odds-ratio de 0.8899, prácticamente 0.89. Como era esperable y se dejaba entrever la posibilidad en el análisis exploratorio, la percepción de falta de apoyo social (del entorno) afecta negativamente a la autovaloración del estado de salud. 
+ 
+ Este valor nos dice que por cada aumento de un punto porcentual de la población con esta circunstancia la probabilidad de tener valoración positiva baja en un 11% respecto a antes del aumento.
+ 
+
+
+### Chron_ill_pct
+
+ Su odds-ratio es de 0.8719. Del todo esperable, la condición de vivir bajo una enfermedad o dolencia crónica afecta negativamente a la autovaloración del estado de salud. 
+ 
+ Por cada aumento de un punto porcentual de la población en esta condición la probabilidad de tener valoración positiva baja en un 12.81% respecto al anterior.
+
+ La enfermedad crónica junto con la anterior apoyo social escaso son los factores que más inciden en una valoración negativa de la salud.
+ 
+ 
+
+### Health_Expend_._GDP
+
+ Tiene un odds-ratio de 1.4559. Este valor parece indicar que el esfuerzo en aumento del gasto en sanidad obtiene resultados, reflejándose en una autovaloración positiva del estado de salud de la población.
+ 
+ El aumento de un punto porcentual sobre el PIB del Gasto Sanitario supone aumentar la probabilidad de tener valoración positiva en un nada despreciable 45.6% sobre el anterior. Este grado de influencia pudiera justificarse con los mejores y en mayor número recursos sanitarios ofrecidos a su población si se aumenta el gasto y la percepción de la población ante esta mejora.
+ 
+
+
+
+### SEX_RFemales
+
+Esta variable tiene un odds-ratio de 0.2161924, tomado como referencia al masculino. La dismi nución en la auto percepción del estado de salud de las mujeres respecto a la de los hombres es considerable.
+
+La probabilidad de tener valoración positiva al ser mujer disminuye en un 78.4% repecto a la del hombre.
+
+
+
+
+
+# 3.- ANÁLISIS DE LOS DATOS POR PAÍS. ANÁLISIS DE COMPONENTES PRINCIPALES.
+
+
+Dado el número elevado de variables de las que disponemos (15) y que estudiando por país se nos quedan 31 observaciones, decidimos realizar un análisis PCA y estudiar la carga (pesos de las variables originales) en los factores resultado de la misma.
+
+
+
+## 3.1 Análisis de componentes principales (PCA)
+
+
+### Cálculo PCA
+
+
+Agrupamos primero nuestro dataset por país:
+
+
+```{r agrupar_por_pais_num}
+
+# agrupación por país
+dfHD.pais.num <- dfHDreg.corr %>% dplyr::select(-SEX, -AGE, -SPHpos) %>% group_by(GEO) %>% summarize_all(~mean(.))
+
+# resumen nuevo dataset  
+str(dfHD.pais.num)
+
+head(dfHD.pais.num)
+
+
+
+```
+
+
+Realizamos la PCA:
+
+
+```{r calculo_pca}
+
+# calculo
+pca.pais <- prcomp(dfHD.pais.num %>% dplyr::select(-GEO), scale = TRUE)
+
+names(pca.pais)
+
+# resumen
+summary(pca.pais)
+
+
+
+```
+
+
+
+
+### Estudio y selección componentes principales.
+
+
+ Dada la situación comentada de sólo 31 observaciones (países), pasamos a analizar las cargas (aportaciones de las variables originales) de cada uno de los componentes principales calculados. 
+ 
+ El objetivo es encontrar factores que por sus cargas (teniendo en cuenta el análisis hecho de regresión logística para el peso de las variables) puedan en conjunto proporcionar una orientación clara, positiva o negativa, respecto a la variable objetivo SPHpos, según dichas cargas.
+
+Pasamos a dibujar las gráficas con los pesos de cada componente, para un mejor estudio:
+
+
+```{r graficas_loadings_pca}
+
+# recuperamos los pesos
+
+df.loadings <- data.frame(pca.pais$rotation[,1:12])
+
+x.names <- row.names(df.loadings)
+
+
+
+# grafica de los pesos de cada factor principal (PCA)
+
+for(columna in 1:12){
+  
+  
+  plot(ggplot(mapping = aes(x = x.names, y =df.loadings[,columna])) +
+         geom_col(fill=ifelse(df.loadings[,columna]>=0,"blue","red")) + theme(axis.text.x = element_text(angle = 90)) + 
+    labs(x = "Variables originales", y = "Pesos")  +
+    ggtitle(paste("FACTOR",columna)) +
+      theme(plot.title = element_text(hjust = 0.5))
+    
+    )
+  
+}
+    
+
+
+```
+
+
+
+ De entre los factores encontramos de interes F1 y F3:
+ 
+ 
+ - **F1:**
+ 
+ Las variables con mayores aportaciones son con el signo positivo son "Smoking_Daily.smoker" y "social_support_intermediate". Con el signo negativo por orden de mayor a menor peso "Physical activity", "Frequent_Drink_pct", practicamente iguales "Health_Expend", "Smoking_Occasional.smoker" y "non_prescrib_med_use_pct", y por último "DailyFyV_5.portions.or.more"
+ 
+ Para ambos signos se han despreciado las variables con valores inferiores o iguales a 0.125, por ser como valor prácticamente la cuarta parte de los valores máximos y por ser pocos en número respecto al resto, con lo cual su aportación no es comparable.
+ 
+ Para el signo positivo señalar que nos encontarmos con solo 2 variables a considerar. Aunque ninguna de ellas resultó significativa en la regresión logística la variable "social_support_intermediate" (existencia de soporte social pero insuficiente) da un claro tono negativo respecto del SPHpos. En cualquier caso hay que tener en cuenta que son en número (2) inferiores a las del signo negativo (6)
+ 
+ De entre las del signo positivo nos encontramos con las 3 variables significativas (regresión logística) que incrementaban la valoración positiva del estado de salud: "Health_Expend",  "DailyFyV_5.portions.or.more" y "Smoking_Occasional.smoker". Del resto en el EDA mostraban mayores valores en la distribución correspondiente a la valoración positiva, o practicamente similar en el caso de uso de las medicinas.
+ 
+ Valorando estas aportaciones en conjunto, teniendo en cuenta el significado de las variables, la orientación sobre la SPHpos de cada signo y el mayor número de variables y significancia de las mismas para el signo negativo, podemos concluir que el factor F1 resumido vendria a tener el significado de  **"Soporte social insuficiente frente al Gasto sanitario y hábitos de vida considerados positivos", con el carácter de cuanto más negativo mejor la autovaloración de salud (SPHpos)**
+
+
+- **F3:**
+ 
+ En primer lugar para este factor las variables a considerar son menos ya que nos encontramos con bastantes de ellas con pesos ínfimos, inferiores o como mucho iguales a la cuarta parte de las 4 variables a considerar.
+ 
+ Con signo positivo y aportación única según lo comentado anteriormente nos encontramos con "Health_Expend", variable significativa y de aporte positivo a la SPHpos. Con el signo negativo tenemos a "BMI_Overweight", "Chron_ill_pct" y "non_prescrib_med_use_pct", las dos primeras significativas y con aporte negativo (aporte grande en el caso de la enfermedad crónica) a la SPHpos, la tercera no significativa y neutra (sin poder observarse orientación en las distribuciones por SPHpos en el EDA).Podría esta tercera incluso verse como consecuencia de la condición de enfermedad crónica ya contemplada.
+ 
+ 
+ Valorando globalmente estas aportaciones, teniendo en cuenta el significado de las variables, la orientación sobre la SPHpos de cada signo, podemos concluir que el factor F3 resumido vendria a tener el significado de  **"Gasto sanitario frente a mala condición física (sobrepeso, enfermedad crónica)", con el carácter de cuanto más positivo mejor la autovaloración de salud (SPHpos)**
+ 
+ 
+Destacar el **factor bivalente que tiene la variable "non_prescrib_med_use_pct", que con peso a considerar actua a favor (signo negativo del factor) del SPHpos para F1 y en contra (signo negativo) para F3**
+
+
+Como resumen:
+
+- **F1: "Soporte social insuficiente frente al Gasto sanitario y hábitos de vida considerados positivos". La valoración positiva del estado de salud (SPHpos) se corresponde con el signo negativo.**
+
+- **F3: "Gasto sanitario frente a mala condición física (sobrepeso, enfermedad crónica)". La valoración positiva del estado de salud (SPHpos) se corresponde con el signo positivo**
+
+- **posible influencia en algún caso a vigilar del factor bivalente variable "non_prescrib_med_use_pct", que actua a favor (signo negativo) de la valoración positiva de salud para F1 y en contra (signo negativo) para F3**
+
+
+
+
+## 3.2 Clusterización a partir de los componentes principales comentados (F1,F3)
+
+
+### Punto de partida, grafica (F1,F3) de los países.
+
+ Con el significado de cada uno comentado en el apartado anterior, echamos primero un vistazo a como quedaría la gráfica de los países tomando estos dos factores como coordenadas cartesianas.
+ 
+
+```{r graf_paises_F1_F3}
+
+# etiquetas países para la gráfica
+abrev.pais <- c("Aus","Blg","Bul","Cro","Cyp","Cze","Dmk","Est","Fnd","Frc","Ger","Grc","Hng","Icl","Irl","Ita","Lat","Lit","Lux","Mlt","Nth","Nrw","Pln","Prt","Rom","Slk","Slv","Spa","Swd","Tky","UK")
+
+# dataset con la información para la representación
+dfHD.factoresPCA.expl <- data.frame(
+  "GEO" = dfHD.pais.num$GEO,
+  "abrev" = abrev.pais,
+  "F1" = pca.pais$x[,1],
+  "F3" = pca.pais$x[,3]
+)
+
+
+# grafica países
+ggplot(data = dfHD.factoresPCA.expl, mapping = aes(x = F1, y = F3)) +
+geom_point(color = "blue", shape=24) + 
+  geom_hline(yintercept = 0, color="red", linetype="dashed") +
+  geom_vline(xintercept = 0, color="red", linetype="dashed") +
+  geom_text(label=dfHD.factoresPCA.expl$abrev, nudge_x = 0.2, nudge_y = 0.2, check_overlap = F) +
+  labs(title = "PAISES, factores F1 y F3") +
+ylab("F3") +
+xlab("F1") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+
+
+```
+
+
+  Nos encontramos en primer lugar con 2 agrupaciones más separadas del resto, la formada solo por Turquia en la esquina inferior derecha y la formada por Islandia y Finlandia en la inferior izquierda. Con menos separación se observa también el grupo de 3 formado por Italia, Bélgica y Francia en la parte superior derecha.
+
+  Existe además una serie de puntos más separados en el cuadrante superior izquierda (con Reino Unido y Noruega cruzando el límite ligeramente, valor muy poco negativo de F3), destacando como muy cercanos entre sí a Holanda, Austria y Luxemburgo. El resto de este cuadrante son Dinamarca, Suecia Alemania e Irlanda.
+
+  Por último en la parte derecha junto con dos puntos en el centro se encuentran una serie de países. Esa agrupación se pudiera quizas dividir en 2 (superior e inferior) por el signo de F3. Serían en la superio España, Portugal, Grecia, Chipre, Rumanía y Bulgaria. En la inferior estarían Croacia, Eslovaquia, Estonia, Letonia, Lituania, Malta, Polonia y Hungría. En la parte central para terminar tenemos a Eslovenia y la República Checa.
+
+
+
+### Clusterización jerárquica acumulativa. Prueba con distintos "linkages"
+
+ Después de esta primera descripción pasamos a la clusterización. Al no tener un número claro de clusteres predeterminado y dado el relativo número pequeño de puntos, pensamos que los dendogramas nos pueden dar una idea muy clara de las posibles agrupaciones y distancias entre ellas. Por esta razón nos decantamos por implementar clustering jerárquico acumulativo.
+ 
+ Dentro de estas opción de clustering probaremos con los "linkages" Ward (basado en la similitud entre puntos de un mismo cluster, idea similar al método k-means), el complete (suele formar grupos compactos) y el average (utilizado como un método a medio camino). Observaremos los dendogramas para poder tener una idea inicial de un rango de número de clusteres a probar. En la elección final influirá el que sean distinguibles los grupos más aislados comentados en la descripción deneral, y a ser posible que existacuniformidad de signos en un mismo cluster, para una interpretación más clara según los factores F1 y F3.
+ 
+ Veamos pues los dendogramas:
+
+
+
+```{r dendogramas}
+
+# estandarización previa al clustering
+ptos.F.scl <- scale(dfHD.factoresPCA.expl[,c(3,4)]) 
+
+# jerarquico con los 3 linkages
+hc.complete = hclust(dist(ptos.F.scl), method ="complete")
+hc.average = hclust(dist(ptos.F.scl), method ="average")
+hc.ward = hclust(dist(ptos.F.scl), method ="ward.D")
+
+# gráficas dendogramas
+plot(hc.complete ,main =" Complete Linkage ",xlab="", sub ="",cex =.9)
+
+plot(hc.average , main =" Average Linkage ",xlab="", sub ="",cex =.9)
+
+plot(hc.ward , main =" Ward Linkage ",xlab="", sub ="",cex =.9 )
+
+
+
+
+```
+
+
+ Observando el dendograma correspondiente al linkage 'complete' parece que un buen punto de partida sería 5 clusteres. Da la sensación de grupos más concentrados. Aun así se distinguirían con ese punto de partida ya los más aislados, los correspondientes a los números {2,10,16}, al {9,14} y el 30.
+ 
+ 
+```{r grupos_mas_aislados}
+
+# nombre de los países de los grupos más aislados
+
+idx_paises <- c(2,10,16,9,14,30)
+
+for (pais in idx_paises) {
+  
+  print(dfHD.factoresPCA.expl[pais,"GEO"])
+  
+}
+
+
+```
+
+ 
+ Como vemos los 3 primeros (Bélgica, Francia, Italia, zona superior derecha), luegos los dos siguientes (Finlandia e Islandia, esquina inferior izquierda) y el último(Turquía aislado en la esquina inferio derecha) los grupos más aislados que distinguimos en la gráfica inicial.
+ 
+ 
+ En el caso del "average" parece un buen punto de partida 6 clusteres. Se siguen distinguiendo los grupos comentados más separados.
+ 
+ 
+ Por último para el "Ward" se necesitaría un valor más alto de partida, entre 6 y 7, de hecho más alto todavia para distinguir los 3 grupos aislados.
+ 
+ 
+ Decidimos para los 3 tomar en un primer momento el número máximo a probar de 8 clusteres, excepto para el ward comentado que llegamos en principio hasta 9. Dibujaremos la gráfica para  todos los valores de clusteres (corte indicado a la función 'cutree').
+
+
+Veamos los resultados para "complete":
+
+
+```{r graf_paises_linkage_complete}
+
+# librería para evitar en lo posible solapamiento etiquetas
+library(ggrepel)
+
+# paleta de color personalizada, para una mejor distinción clústeres
+paleta.pers <- c("red", "blue", "green", "brown", "orange",
+"magenta", "yellow", "#8E9CA3", "#556670", "#000000")
+
+# gráficas para cada número de clústeres elegido
+for(n_clust in seq(5,8,by = 1)){
+  
+  # corte dendograma para nº de clusteres elegido
+  dfHD.factoresPCA.expl$label_complete <- as.factor(cutree(hc.complete,n_clust))
+  
+  
+  #grafica clustering
+  plot(ggplot(data = dfHD.factoresPCA.expl, mapping = aes(x = F1, y = F3)) +
+geom_point(mapping = aes(x = F1, y = F3, fill = label_complete), shape=24,size=3) + 
+  geom_hline(yintercept = 0, color="red", linetype="dashed") +
+  geom_vline(xintercept = 0, color="red", linetype="dashed") +
+  geom_text_repel(label=dfHD.factoresPCA.expl$abrev, nudge_x = 0.2, nudge_y = 0.2) +
+  labs(title = paste(n_clust," clusteres, COMPLETE")) +
+ylab("F3") +
+xlab("F1") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_fill_manual(values = paleta.pers)
+       )
+  
+}
+    
+
+
+
+```
+
+
+Los correspondientes a "average":
+
+
+
+```{r graf_paises_linkage_average}
+
+
+for(n_clust in seq(6,8,by = 1)){
+  
+  # corte dendograma para nº de clusteres elegido
+  dfHD.factoresPCA.expl$label_avg <- as.factor(cutree(hc.average,n_clust))
+  
+  # grafica clustering
+  plot(ggplot(data = dfHD.factoresPCA.expl, mapping = aes(x = F1, y = F3)) +
+geom_point(mapping = aes(x = F1, y = F3, fill = label_avg), shape=24,size=3) + 
+  geom_hline(yintercept = 0, color="red", linetype="dashed") +
+  geom_vline(xintercept = 0, color="red", linetype="dashed") +
+  geom_text_repel(label=dfHD.factoresPCA.expl$abrev, nudge_x = 0.2, nudge_y = 0.2) +
+  labs(title = paste(n_clust," clusteres, AVERAGE")) +
+ylab("F3") +
+xlab("F1") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_fill_manual(values = paleta.pers)
+       )
+  
+}
+    
+
+
+
+```
+
+
+
+Y por último los de "ward":
+
+
+```{r graf_paises_linkage_ward}
+
+
+for(n_clust in seq(6,9,by = 1)){
+  
+  # corte dendograma para nº de clusteres elegido
+  dfHD.factoresPCA.expl$label_ward <- as.factor(cutree(hc.ward,n_clust))
+  
+  # grafica clustering
+  plot(ggplot(data = dfHD.factoresPCA.expl, mapping = aes(x = F1, y = F3)) +
+geom_point(mapping = aes(x = F1, y = F3, fill = label_ward), shape=24,size=3) + 
+  geom_hline(yintercept = 0, color="red", linetype="dashed") +
+  geom_vline(xintercept = 0, color="red", linetype="dashed") +
+  geom_text_repel(label=dfHD.factoresPCA.expl$abrev, nudge_x = 0.2, nudge_y = 0.2) +
+  labs(title = paste(n_clust," clusteres, WARD")) +
+ylab("F3") +
+xlab("F1") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_fill_manual(values = paleta.pers)
+       )
+  
+}
+    
+
+```
+
+
+ Vistos todas las opciones en primer lugar descartamos el linkage "ward" ya que para llegar a la distinción de los 3 grupos particulares necesita un número tan alto (8) que implica en nuestra opinión una excesiva división en la parte derecha (sin grandes diferencias en las coordenadas).
+
+ En el caso del "complete" con 6 ya distingue las particularidades. Tiene como negativo que la disposición mayoritaria a la derecha la divide en 2 grupos, el superior con disparidad destacable del signo de F3 dentro del grupo.
+
+ Finalmente para el caso "average" observamos incluso más posibilidades. Con 6 ya se diferencian los grupos particulares más separados, y al contrario del anterior lo hace con mayor uniformidad de signo entre los dos grupos de la derecha. Si llegamos a 7 a la anterior se añade en el cuadrante superior izquierda el distinguir Holanda, Austria y Luxemburgo como grupo con coordenadas prácticamente iguales. Y si llegamos a 8 a todo lo anterior distingue dentro de la distribución de la derecha aparte de dos grupo con mayor uniformidad de signo, el grupo formado por República Checa y Slovaquia, practicamente ambos en el centro (origen de coordenadas) de la gráfica. Podríamos por lo tanto tomar los 2 extremos de división, con 6 y con 8.
+ 
+ 
+
+### Análisis de los grupos resultados de la clusterización elegida.
+
+
+ Pasamos a analizar para el linkage "average" el caso de 8 clusteres ya que, mediante uniones de ciertos grupos, nos permitirá también hacernos una idea del análisis correspondiente a 6 clusteres.
+
+
+
+```{r clusteres_avg_resultado_final}
+
+# linkage "average", 8 clusteres
+n_clust = 8
+dfHD.factoresPCA.expl$label_avg <- as.factor(cutree(hc.average,n_clust))
+
+# grafica clusterizacion
+ggplot(data = dfHD.factoresPCA.expl, mapping = aes(x = F1, y = F3)) +
+geom_point(mapping = aes(x = F1, y = F3, fill = label_avg), shape=24,size=5) + 
+  geom_hline(yintercept = 0, color="red", linetype="dashed") +
+  geom_vline(xintercept = 0, color="red", linetype="dashed") +
+  geom_text(label=dfHD.factoresPCA.expl$abrev, nudge_x = 0.2, nudge_y = 0.2, check_overlap = F) +
+  labs(title = paste(n_clust," clusteres, AVERAGE")) +
+ylab("F3") +
+xlab("F1") +
+  theme(plot.title = element_text(hjust = 0.5))
+       
+
+```
+
+
+
+  Recordemos antes el carácter de los factores F1 y F3, y la posible influencia del factor bivalente "non_prescrib_med_use_pct" :
+  
+  - **F1:** "Soporte social insuficiente frente al Gasto sanitario y hábitos de vida considerados positivos". La valoración positiva del estado de salud (SPHpos) se corresponde con el signo negativo.
+
+  - **F3:** "Gasto sanitario frente a mala condición física (sobrepeso, enfermedad crónica)". La valoración positiva del estado de salud (SPHpos) se corresponde con el signo positivo.
+
+  - **factor bivalente variable "non_prescrib_med_use_pct"**, que actua a favor (signo negativo) de la valoración positiva de salud para F1 y en contra (signo negativo) para F3
+  
+  
+  Dadas las relaciones de los signos de F1 y F2 con la valoración positiva de salud, en la gráfica la mejor situación la tendrán los países que se encuentren en el cuadrante superior izquierda, y se encontararán con la peor valoración los del cuadrante inferior derecha.
+  
+
+#### 1.- En la situación privilegiada del cuadrante superior izquierda nos encontramos con 2 grupos:
+  
+  **A) {Alemania, Dinamarca, Noruega, Suecia, Reino Unido e Irlanda}**: Mejor grupo, valores negativos medios-altos de F1 y positivos medio-bajos de F3.
+  
+  Todos se encuentran entre los valores más altos de Gasto Sanitario.
+  
+  Entre los hábitos considerados positivos también todos con valores altos-medios de Actividad Física, Bebedores Habituales y Fumadores Ocasionales (en este último caso a excepción de Reino Unido que es muy bajo). En cuanto al Consumo de Frutas y Verduras recomendado encontramos dos comportamientos dentro del grupo, de los valores más altos (los 3 de cabeza) para Reino Unido, Irlanda y Dinamarca, y en el grupo de los medios-bajos para Alemania, Noruega y Suecia. Este doble comportamiento vendría a explicar el que este grupo sea menos concentrado, esté algo más estirado. En global buenos valores para los hábitos considerados positivos.
+   
+   Soporte Social insuficiente en valores medio en el caso de Alemania y bajos en el resto. Hablando del Sobrepeso tenemos valores bajos excepto para Irlanda y Reino Unido. En cuanto a la tasa de Enfermedad crónica valores medios-altos excepto para Irlanda y Dinamarca. Estas condiciones de sobrepeso y enfermedad crónica explicarían los valores medio-bajos de F2. Al igual las excepciones comentadas justificarían que este cluster esté menos concentrado, un poco más estirado.
+   
+   El grupo mejor situado con valores en general óptimos para la valoración positiva.
+  
+  
+  
+  **B) {Holanda, Austria y Luxemburgo}**: valores bajos, negativo para F1 y positivo para F3.
+  
+  Presenta la particularidad para el Gasto Sanitario de valores entre los más altos para Holanda y Austria y de los menores para Luxemburgo. Esta diferencia se deba seguramente al muy pequeño (aún frente a sus compañeros) tamaño del país y la unidad de medida como porcentaje del gasto sobre el PIB, que será tambien inferior.
+  
+  Valores medios-altos para la Actividad Física y Fumadores Ocasionales. Valores altos para Holanda y Luxemburgo y bajo para Austria en el Consumo de Frutas y Verduras, y medio bajo para Austria y Holanda en Bebedores Frecuentes, con la excepción de alta en Luxemburgo, no sabemos si influenciado por su particularidad comentada.
+ 
+ Valores medios-bajos de Soporte Social insuficiente para los 3. Valores entre los más bajos de sobrepeso y medio-altos (excepto Luxemburgo bajo) de tasa de enfermedad crónica.
+ 
+ Los valores relativos a los hábitos de vida considerados positivos más bajos respecto al anterior grupo, y mayor tasa de enfermedad crónica justificarian la buena posición pero con valores bajos de F1 y F3 óptimos. 
+  
+  
+
+#### 2.- Excepción del cuadrante inferior derecha:
+  
+  **C) {Islandia y Finlandia}**: grupo con comportamiento particular, valores óptimos de F1 y malos (medio-altos negativos) para F3.
+  
+  Valores alto y medio-alto respectivamente de Gasto Sanitario.
+  
+  Ambos tienen dentro de los hábitos autoconsiderados positivos de los más altos los correspondientes a Fumador Ocasional, Bebedor Frecuente y Actividad Física, con valores medios de Consumo de Frutas y Verduras al menos el recomendado (igual o mayor a 5 porciones).
+  
+   Valores de soporte social insuficiente medio para Finlandia y el más bajo de todos los países para Islandia. En cuanto al sobrepeso valor muy alto (segundo del ranking) para Islandia y medio-alto para Finlandia. Tasa de Enfermedad Crónica la más alta (primera del ranking) para Finlandia y media para Islandia.
+   
+   Son las condiciones físicas (sobrepeso y enfermedad crónica), con ambos países en primeros lugares y medio-altos los que explicarían el signo tan negativo de F3 y el aislamiento en la esquina inferior izquierda de este grupo, con el resto de factores (gasto sanitario y hábitos) óptimos.
+  
+  
+ 
+
+#### 3.- Cuadrante superior derecha:
+ 
+ **D) {Francia, Bélgica e Italia}**: grupo con valores ligeramente malos de F1 (valores cortos positivos) y de los mejores (positivos altos) para F3.
+ 
+  Valores altos de Gasto Sanitario para los dos primeros (Francia primero del ranking de hecho) y medio para Italia.
+  
+  En cuanto a los hábitos considerados positivos valores medios y medios bajos en el Consumo de Frutas y Verduras, Actividad Física y Fumadores Ocasionales. Presenta particularidad para los Bebedores Habituales, con valor medio alto para Bélgica y bajos para Francia e Italia.
+  
+  Presentan valores medio-altos de Soporte Social insuficiente. En cambio en Sobrepeso ocupan los últimos valores del ranking y en cuanto a la Enfermedad crónica valores bastante bajos excepto para Francia con medio-alto.
+  
+  El soporte Social insuficiente medio-alto y valores en general medios-bajos de los hábitos considerados positivos explican los valores de F1 ligeramente malos. El predominante alto Gasto sanitario y la buena condición física (últimos en sobrepeso y bajos excepto Francia en enfermedad Crónica) explica que tengan los mejores valores de F3.
+ 
+
+
+ **E) {España, Portugal, Grecia, Chipre, Croacia, Bulgaria y Rumanía}**: grupo con valores cortos y medios positivos de F1 (leve-medio mal comportamiento) y cortos óptimos (positivos cortos) para F3.
+ 
+ Valores en el rango entre medios y bajos, con los valores superiores (por encima de la mitad en el ranking) para España y Portugal y el peor valor (penúltimo del ranking) para Rumanía. Disparidad por lo tanto en este aspecto.
+ 
+ Valores de nuevo entre medios y bajos de Actividad Física (liderando en medio del ranking España). Para el Consumo de Frutas y Verduras valores medio-altos para España, Portugal y Chipre y de los últimos del ranking para el resto. Valores en general medios-bajos de bebedores frecuentes con la excepción de Rumania (altos) y por último para los Fumadores Ocasionales valores bajos excepto para Bulgaria, Rumania y Grecia (medio-altos).
+ 
+ En el Soporte Social insuficiente se observan dos subgrupos. España, Croacia y Chipre con excelente comportamiento (de los últimos en el ranking) y el resto con valores medio-altos. Para el sobrepeso valores en general medios-bajos (excepto Grecia y Croacia altos). Por último la tasa de Enfermedad Crónica presenta valores en general bajos excepto en Portugal y Chipre.
+ 
+ Observamos pues en este grupo tendencias de la mitad hacia abajo en Gasto Sanitario, en general medios-bajos (con excepciones) en los Hábitos considerados positivos y medio bajos (de nuevo excepxiones) en Sobrepeso y Enfermedad Crónica. Comportamiento dispar en el cluster en cuanto al Soporte Social insuficiente. Son los valores en general medios-bajos de Gasto Sanitario y Hábitos y la aportación que pueda hace el Soporte Social los que hacen tener valor leve-moderadamente malo de F1. El buen comportamiento en general de la condición física Sobrepeso, Enfermedad crónica) se ven seguramente frenados por al Gasto sanitario medio-bajo. Importante señalar que las numerosas excepciones explicarían cierto grado de disgregación en el cluster (y la variación de comportamiento que conlleva), con España en una posición privilegiada dentro del mismo.
+
+
+
+#### 4.-Peor situación correspondiente al cuadrante inferior derecha:
+
+ **F) {Estonia, Letonia, Lituania, Polonia, Hungría, Eslovaquia y Malta}**: grupo con valores cortos y medios positivos de F1 (leve-medio mal comportamiento) y de cortos a medio-altos negativos (mal comportamiento) para F3.
+ 
+ Valores del gasto sanitario entre los últimos de ranking a excepción de Malta, que se explicaría al igual que comentamos con Luxemburgo con el pequeño tamaño del país y la unidad del gasto en porcentaje del PIB.
+ 
+ Presentan valores entre medios y bajos de Actividad Física y Bebedores Habituales, igual que para Fumadores Ocasionales (excepción en este último caso de Eslovenia medio-alto). En el Consumo de Frutas y Verduras comportamiento en general medio excepto Eslovenia, Malta y Lituania (medio-altos)
+ 
+ Valores entre los más altos del ranking de Soporte Social insuficiente (excepción de Hungría y Malta medios). En cuanto al Sobrepeso valores medio-altos y el mayor valor del ranking para Malta. La tasa de Enfermedad Crónica presenta por lo general valores medios con 2 excepciones a destacar, Estonia (segunda en el ranking) y Letonia (quinta).
+ 
+ Justificación clara de la mala situación de este cluster, con Gastos Sanitarios bajos, valores en general medio-bajos de Hábitos considerados positivos y altos de Soporte Social insuficiente, con valores medio-altos y algunas altas posiciones en el ranking para la mala condición física (Sobrepeso y Enfermedad Crónica). De nueva las excepciones justificarían cierto disgregamiento en el cluster.
+
+
+**G) {Turquía}**: aislada en la esquina inferior derecha con valor alto positivo de F1 y alto negativo para F3 (ambos el peor comportamiento)
+
+  Para empezar presenta el último valor en el ranking de Gasto Sanitario.
+  
+  Último en el ranking para el Consumo de Frutas y Verduras, penúltimo en el de Actividad Física y Bebedores Habituales, sólo presenta valor medio-bajo en Fumadores Ocasionales en cuanto a los Hábitos considerados positivos.
+  
+  Quinto en el ranking de Soporte Social insuficiente y tercero tanto en el de Sobrepeso como en el de tasa de Enfermedad Crónica terminan de situar a Turquía en la peor de las posiciones de autovaloración positiva de salud.
+
+
+
+#### 5.- Excepción origen de coordenadas: valores de F1 y F3 practicamente cero.
+
+
+**H) {Eslovenia y República Checa}**: comportamiento singular, grupo con valores practicamente cero para ambos F1 y F3.Estos países presentan coordenadas (-0.14,-0.18) Eslovenia y (0.08,-0.31) para la República Checa.
+
+  Presentan ambos valores medios de Gasto Sanitario. 
+  
+  Entre los hábitos considerados positivos valores bajos de Consumo de Frutas y Verduras y medios-bajos de Bebedores Habituales, con Eslovenia algo mejor (medio-alto) respecto al medio de la República Checa en Actividad Física y mayor diferencia a favor de la República Checa (segundo en el ranking respecto valor medio) en Fumadores Ocasionales. En global preponderancia de valores medios-bajos en los hábitos.
+ 
+  Valores de Soporte Social insuficiente medio-bajos, al igual que de tasa de Enfermedad Crónica. Finalmente valores medio-altos de Sobrepeso.
+  
+  La tendencia a presentar valores medios o cercanos a los medios para todas las variables, con algunas excepciones que parecen compensarse entre ellas, vendría a justificar la posición intermedia respecto a los factores. Hablando hipotéticamnete dda su posición en la gráfica podría tratarse de países que han evolucionado positivamente en transición del grupo (F) al (E).
+ 
+ 
+
+ 
+#### 6.- Resumen final.
+ 
+ Los países pertenecientes a los grupos "A" y "B" (Alemania, Dinamarca, Noruega, Suecia, Reino Unido, Irlanda, Holanda, Austria y Luxemburgo), los mejor posicionados en cuanto a la totalidad de las variables (con alguna excepción por otro lado lógica) están en el Centro y Norte de Europa. Faltarían por la región para completar el grupo "C" con Islandia y Finlandia, ambos lastrados y separados de los anteriores por la condición física (valores de Sobrepeso y Enfermedad Crónica), compartiendo la bondad de las restantes.
+ 
+ A continuación nos encontramos con el grupo "D" (Francia, Bélgica e Italia), con  algo peores valores de hábitos de vida considerados positivos y soporte Social insuficiente medio-alto, compartiendo con los anteriores el Gasto Sanitario alto y buena condición física (bajo Sobrepeso y tasa de Enfermedad Crónica) en general.
+ 
+ Seguimos con el grupo "E" (España, Portugal, Grecia, Chipre, Croacia, Bulgaria y Rumanía), países del sur de Europa a excepción de los dos últimos (este). El Gasto Sanitario entre medio y bajo, en general valores medios-bajos de Habitos considerados positivos y valores medios de Soporte Social insuficiente son los que, a pesar de una no mala condición física (valores medios-bajos de Sobrepeso y bajos en general de tasa de Enfermedad Crónica) sitúan a este grupo un peldaño por debajo del anterior.
+ 
+   El grupo "F" (Estonia, Letonia, Lituania, Polonia, Hungría, Eslovaquia y Malta) presenta como características Gastos Sanitarios bajos, valores en general medio-bajos de Hábitos considerados positivos y altos de Soporte Social insuficiente. Acompañado de valores medio-altos y algunas altas posiciones en el ranking de mala condición física (Sobrepeso y Enfermedad Crónica), sitúan a este grupo entre los últimos en autovaloración positiva. Señalar que con la excepción de Malta todas fueron pertenecientes al antiguo bloque soviético.
+
+ Por último nos encontramos por un lado aislada a Turquía (grupo "G"), con los peores resultados en todas las variables: Gasto y Hábitos considerados positivos en las últimas y penútimas posiciones del ranking, mala Condición Física con terceros puestos en el ranking de Sobrepeso y Enfermedad Crónica, y quinta posición en el de Soporte Social insuficiente.
+
+ Por otro finalmente tenemos como excepción al grupo "H" (Eslovenia y República Checa) con en general valores medios o cercanos a los medios para todas las variables, con algunas excepciones que parecen compensarse para dar como final una posición intermedia en general para todos los factores. Su posición en el este de Europa y condición de ex componentes del bloque sovíetico hacen compararse con el grupo "F" estando un peldaño por encima y relativamente próximos al grupo "E".
+
+
+
+
+
+### Guardado del dataset para la visualización en Tableau (dataset análisis).
+
+ 
+```{r guardar_dataset_PCA_Clust_Tableau}
+
+
+write.table(dfHD.factoresPCA.expl,"./data/analisis_PCA_Vis_Tableau.csv", row.names = FALSE,dec = ",",sep = ";")
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
