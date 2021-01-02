@@ -1,0 +1,311 @@
+GEO,SEX,AGE,non_presc_med_use_pct
+Belgium,Males,From 15 to 24 years,13.4
+Belgium,Males,From 25 to 34 years,17.2
+Belgium,Males,From 35 to 44 years,18.1
+Belgium,Males,From 45 to 64 years,17.0
+Belgium,Males,65 years or over,16.2
+Belgium,Females,From 15 to 24 years,15.2
+Belgium,Females,From 25 to 34 years,27.4
+Belgium,Females,From 35 to 44 years,20.5
+Belgium,Females,From 45 to 64 years,22.8
+Belgium,Females,65 years or over,18.8
+Bulgaria,Males,From 15 to 24 years,18.4
+Bulgaria,Males,From 25 to 34 years,20.3
+Bulgaria,Males,From 35 to 44 years,26.2
+Bulgaria,Males,From 45 to 64 years,32.6
+Bulgaria,Males,65 years or over,43.7
+Bulgaria,Females,From 15 to 24 years,22.9
+Bulgaria,Females,From 25 to 34 years,35.5
+Bulgaria,Females,From 35 to 44 years,36.4
+Bulgaria,Females,From 45 to 64 years,47.0
+Bulgaria,Females,65 years or over,53.8
+Czechia,Males,From 15 to 24 years,23.9
+Czechia,Males,From 25 to 34 years,32.9
+Czechia,Males,From 35 to 44 years,35.6
+Czechia,Males,From 45 to 64 years,39.6
+Czechia,Males,65 years or over,44.9
+Czechia,Females,From 15 to 24 years,40.5
+Czechia,Females,From 25 to 34 years,51.6
+Czechia,Females,From 35 to 44 years,52.9
+Czechia,Females,From 45 to 64 years,59.3
+Czechia,Females,65 years or over,58.6
+Denmark,Males,From 15 to 24 years,40.1
+Denmark,Males,From 25 to 34 years,45.2
+Denmark,Males,From 35 to 44 years,46.6
+Denmark,Males,From 45 to 64 years,49.9
+Denmark,Males,65 years or over,54.8
+Denmark,Females,From 15 to 24 years,56.6
+Denmark,Females,From 25 to 34 years,64.1
+Denmark,Females,From 35 to 44 years,57.7
+Denmark,Females,From 45 to 64 years,66.9
+Denmark,Females,65 years or over,67.3
+Germany (until 1990 former territory of the FRG),Males,From 15 to 24 years,35.1
+Germany (until 1990 former territory of the FRG),Males,From 25 to 34 years,39.5
+Germany (until 1990 former territory of the FRG),Males,From 35 to 44 years,38.9
+Germany (until 1990 former territory of the FRG),Males,From 45 to 64 years,34.5
+Germany (until 1990 former territory of the FRG),Males,65 years or over,34.1
+Germany (until 1990 former territory of the FRG),Females,From 15 to 24 years,51.5
+Germany (until 1990 former territory of the FRG),Females,From 25 to 34 years,52.4
+Germany (until 1990 former territory of the FRG),Females,From 35 to 44 years,55.4
+Germany (until 1990 former territory of the FRG),Females,From 45 to 64 years,49.6
+Germany (until 1990 former territory of the FRG),Females,65 years or over,43.6
+Estonia,Males,From 15 to 24 years,34.9
+Estonia,Males,From 25 to 34 years,33.2
+Estonia,Males,From 35 to 44 years,39.6
+Estonia,Males,From 45 to 64 years,35.4
+Estonia,Males,65 years or over,44.5
+Estonia,Females,From 15 to 24 years,48.9
+Estonia,Females,From 25 to 34 years,54.7
+Estonia,Females,From 35 to 44 years,51.2
+Estonia,Females,From 45 to 64 years,54.2
+Estonia,Females,65 years or over,56.1
+Ireland,Males,From 15 to 24 years,20.9
+Ireland,Males,From 25 to 34 years,32.8
+Ireland,Males,From 35 to 44 years,31.4
+Ireland,Males,From 45 to 64 years,23.9
+Ireland,Males,65 years or over,19.2
+Ireland,Females,From 15 to 24 years,31.5
+Ireland,Females,From 25 to 34 years,42.0
+Ireland,Females,From 35 to 44 years,44.1
+Ireland,Females,From 45 to 64 years,38.8
+Ireland,Females,65 years or over,27.9
+Greece,Males,From 15 to 24 years,22.6
+Greece,Males,From 25 to 34 years,24.0
+Greece,Males,From 35 to 44 years,24.4
+Greece,Males,From 45 to 64 years,22.1
+Greece,Males,65 years or over,24.1
+Greece,Females,From 15 to 24 years,27.4
+Greece,Females,From 25 to 34 years,28.5
+Greece,Females,From 35 to 44 years,32.5
+Greece,Females,From 45 to 64 years,33.1
+Greece,Females,65 years or over,30.9
+Spain,Males,From 15 to 24 years,21.5
+Spain,Males,From 25 to 34 years,23.0
+Spain,Males,From 35 to 44 years,24.7
+Spain,Males,From 45 to 64 years,18.2
+Spain,Males,65 years or over,11.2
+Spain,Females,From 15 to 24 years,30.4
+Spain,Females,From 25 to 34 years,27.9
+Spain,Females,From 35 to 44 years,27.4
+Spain,Females,From 45 to 64 years,23.9
+Spain,Females,65 years or over,16.0
+France,Males,From 15 to 24 years,18.0
+France,Males,From 25 to 34 years,26.6
+France,Males,From 35 to 44 years,26.5
+France,Males,From 45 to 64 years,21.2
+France,Males,65 years or over,17.1
+France,Females,From 15 to 24 years,32.0
+France,Females,From 25 to 34 years,36.6
+France,Females,From 35 to 44 years,37.5
+France,Females,From 45 to 64 years,34.5
+France,Females,65 years or over,22.3
+Croatia,Males,From 15 to 24 years,14.4
+Croatia,Males,From 25 to 34 years,15.9
+Croatia,Males,From 35 to 44 years,26.6
+Croatia,Males,From 45 to 64 years,26.8
+Croatia,Males,65 years or over,37.1
+Croatia,Females,From 15 to 24 years,24.4
+Croatia,Females,From 25 to 34 years,34.6
+Croatia,Females,From 35 to 44 years,36.9
+Croatia,Females,From 45 to 64 years,38.1
+Croatia,Females,65 years or over,39.5
+Italy,Males,From 15 to 24 years,13.0
+Italy,Males,From 25 to 34 years,18.1
+Italy,Males,From 35 to 44 years,21.2
+Italy,Males,From 45 to 64 years,17.5
+Italy,Males,65 years or over,12.9
+Italy,Females,From 15 to 24 years,18.8
+Italy,Females,From 25 to 34 years,24.9
+Italy,Females,From 35 to 44 years,26.2
+Italy,Females,From 45 to 64 years,24.0
+Italy,Females,65 years or over,17.9
+Cyprus,Males,From 15 to 24 years,8.5
+Cyprus,Males,From 25 to 34 years,12.9
+Cyprus,Males,From 35 to 44 years,22.1
+Cyprus,Males,From 45 to 64 years,16.3
+Cyprus,Males,65 years or over,18.6
+Cyprus,Females,From 15 to 24 years,17.0
+Cyprus,Females,From 25 to 34 years,26.7
+Cyprus,Females,From 35 to 44 years,28.7
+Cyprus,Females,From 45 to 64 years,28.6
+Cyprus,Females,65 years or over,22.3
+Latvia,Males,From 15 to 24 years,34.5
+Latvia,Males,From 25 to 34 years,38.6
+Latvia,Males,From 35 to 44 years,40.4
+Latvia,Males,From 45 to 64 years,45.0
+Latvia,Males,65 years or over,54.3
+Latvia,Females,From 15 to 24 years,53.8
+Latvia,Females,From 25 to 34 years,58.5
+Latvia,Females,From 35 to 44 years,62.7
+Latvia,Females,From 45 to 64 years,64.4
+Latvia,Females,65 years or over,66.4
+Lithuania,Males,From 15 to 24 years,36.2
+Lithuania,Males,From 25 to 34 years,36.6
+Lithuania,Males,From 35 to 44 years,41.1
+Lithuania,Males,From 45 to 64 years,53.4
+Lithuania,Males,65 years or over,60.7
+Lithuania,Females,From 15 to 24 years,47.3
+Lithuania,Females,From 25 to 34 years,56.7
+Lithuania,Females,From 35 to 44 years,61.4
+Lithuania,Females,From 45 to 64 years,71.4
+Lithuania,Females,65 years or over,73.3
+Luxembourg,Males,From 15 to 24 years,28.2
+Luxembourg,Males,From 25 to 34 years,33.0
+Luxembourg,Males,From 35 to 44 years,32.6
+Luxembourg,Males,From 45 to 64 years,30.9
+Luxembourg,Males,65 years or over,27.5
+Luxembourg,Females,From 15 to 24 years,36.9
+Luxembourg,Females,From 25 to 34 years,40.3
+Luxembourg,Females,From 35 to 44 years,41.2
+Luxembourg,Females,From 45 to 64 years,41.8
+Luxembourg,Females,65 years or over,30.3
+Hungary,Males,From 15 to 24 years,40.5
+Hungary,Males,From 25 to 34 years,37.7
+Hungary,Males,From 35 to 44 years,40.9
+Hungary,Males,From 45 to 64 years,42.0
+Hungary,Males,65 years or over,46.8
+Hungary,Females,From 15 to 24 years,43.4
+Hungary,Females,From 25 to 34 years,50.8
+Hungary,Females,From 35 to 44 years,55.3
+Hungary,Females,From 45 to 64 years,52.8
+Hungary,Females,65 years or over,54.6
+Malta,Males,From 15 to 24 years,30.2
+Malta,Males,From 25 to 34 years,28.7
+Malta,Males,From 35 to 44 years,33.1
+Malta,Males,From 45 to 64 years,26.2
+Malta,Males,65 years or over,27.3
+Malta,Females,From 15 to 24 years,36.5
+Malta,Females,From 25 to 34 years,34.2
+Malta,Females,From 35 to 44 years,35.8
+Malta,Females,From 45 to 64 years,41.8
+Malta,Females,65 years or over,38.2
+Netherlands,Males,From 15 to 24 years,26.6
+Netherlands,Males,From 25 to 34 years,40.9
+Netherlands,Males,From 35 to 44 years,36.3
+Netherlands,Males,From 45 to 64 years,28.6
+Netherlands,Males,65 years or over,29.2
+Netherlands,Females,From 15 to 24 years,42.5
+Netherlands,Females,From 25 to 34 years,49.5
+Netherlands,Females,From 35 to 44 years,46.6
+Netherlands,Females,From 45 to 64 years,50.2
+Netherlands,Females,65 years or over,44.9
+Austria,Males,From 15 to 24 years,30.1
+Austria,Males,From 25 to 34 years,33.6
+Austria,Males,From 35 to 44 years,30.5
+Austria,Males,From 45 to 64 years,25.5
+Austria,Males,65 years or over,24.1
+Austria,Females,From 15 to 24 years,34.4
+Austria,Females,From 25 to 34 years,41.7
+Austria,Females,From 35 to 44 years,43.7
+Austria,Females,From 45 to 64 years,42.3
+Austria,Females,65 years or over,37.1
+Poland,Males,From 15 to 24 years,34.2
+Poland,Males,From 25 to 34 years,43.3
+Poland,Males,From 35 to 44 years,42.7
+Poland,Males,From 45 to 64 years,43.9
+Poland,Males,65 years or over,46.7
+Poland,Females,From 15 to 24 years,53.1
+Poland,Females,From 25 to 34 years,59.3
+Poland,Females,From 35 to 44 years,62.4
+Poland,Females,From 45 to 64 years,61.0
+Poland,Females,65 years or over,58.7
+Portugal,Males,From 15 to 24 years,29.0
+Portugal,Males,From 25 to 34 years,29.7
+Portugal,Males,From 35 to 44 years,26.7
+Portugal,Males,From 45 to 64 years,19.1
+Portugal,Males,65 years or over,15.1
+Portugal,Females,From 15 to 24 years,24.2
+Portugal,Females,From 25 to 34 years,29.9
+Portugal,Females,From 35 to 44 years,27.9
+Portugal,Females,From 45 to 64 years,26.2
+Portugal,Females,65 years or over,19.9
+Romania,Males,From 15 to 24 years,6.7
+Romania,Males,From 25 to 34 years,6.7
+Romania,Males,From 35 to 44 years,8.3
+Romania,Males,From 45 to 64 years,13.0
+Romania,Males,65 years or over,18.1
+Romania,Females,From 15 to 24 years,13.1
+Romania,Females,From 25 to 34 years,18.3
+Romania,Females,From 35 to 44 years,16.1
+Romania,Females,From 45 to 64 years,21.4
+Romania,Females,65 years or over,21.9
+Slovenia,Males,From 15 to 24 years,29.8
+Slovenia,Males,From 25 to 34 years,29.8
+Slovenia,Males,From 35 to 44 years,29.9
+Slovenia,Males,From 45 to 64 years,26.5
+Slovenia,Males,65 years or over,26.5
+Slovenia,Females,From 15 to 24 years,39.1
+Slovenia,Females,From 25 to 34 years,36.8
+Slovenia,Females,From 35 to 44 years,41.1
+Slovenia,Females,From 45 to 64 years,37.0
+Slovenia,Females,65 years or over,35.4
+Slovakia,Males,From 15 to 24 years,27.9
+Slovakia,Males,From 25 to 34 years,31.4
+Slovakia,Males,From 35 to 44 years,34.5
+Slovakia,Males,From 45 to 64 years,36.1
+Slovakia,Males,65 years or over,48.7
+Slovakia,Females,From 15 to 24 years,37.0
+Slovakia,Females,From 25 to 34 years,46.4
+Slovakia,Females,From 35 to 44 years,52.3
+Slovakia,Females,From 45 to 64 years,56.2
+Slovakia,Females,65 years or over,63.7
+Finland,Males,From 15 to 24 years,54.5
+Finland,Males,From 25 to 34 years,69.4
+Finland,Males,From 35 to 44 years,59.8
+Finland,Males,From 45 to 64 years,58.3
+Finland,Males,65 years or over,57.3
+Finland,Females,From 15 to 24 years,80.9
+Finland,Females,From 25 to 34 years,84.2
+Finland,Females,From 35 to 44 years,80.3
+Finland,Females,From 45 to 64 years,80.5
+Finland,Females,65 years or over,75.5
+Sweden,Males,From 15 to 24 years,31.5
+Sweden,Males,From 25 to 34 years,41.7
+Sweden,Males,From 35 to 44 years,39.9
+Sweden,Males,From 45 to 64 years,35.3
+Sweden,Males,65 years or over,27.5
+Sweden,Females,From 15 to 24 years,41.2
+Sweden,Females,From 25 to 34 years,51.5
+Sweden,Females,From 35 to 44 years,54.1
+Sweden,Females,From 45 to 64 years,50.1
+Sweden,Females,65 years or over,32.4
+United Kingdom,Males,From 15 to 24 years,29.0
+United Kingdom,Males,From 25 to 34 years,40.3
+United Kingdom,Males,From 35 to 44 years,43.5
+United Kingdom,Males,From 45 to 64 years,37.8
+United Kingdom,Males,65 years or over,33.2
+United Kingdom,Females,From 15 to 24 years,41.2
+United Kingdom,Females,From 25 to 34 years,48.7
+United Kingdom,Females,From 35 to 44 years,53.9
+United Kingdom,Females,From 45 to 64 years,52.1
+United Kingdom,Females,65 years or over,42.7
+Iceland,Males,From 15 to 24 years,79.2
+Iceland,Males,From 25 to 34 years,81.4
+Iceland,Males,From 35 to 44 years,82.0
+Iceland,Males,From 45 to 64 years,77.4
+Iceland,Males,65 years or over,82.2
+Iceland,Females,From 15 to 24 years,85.9
+Iceland,Females,From 25 to 34 years,88.2
+Iceland,Females,From 35 to 44 years,89.6
+Iceland,Females,From 45 to 64 years,90.6
+Iceland,Females,65 years or over,88.3
+Norway,Males,From 15 to 24 years,45.2
+Norway,Males,From 25 to 34 years,49.5
+Norway,Males,From 35 to 44 years,37.8
+Norway,Males,From 45 to 64 years,45.2
+Norway,Males,65 years or over,55.8
+Norway,Females,From 15 to 24 years,48.6
+Norway,Females,From 25 to 34 years,60.5
+Norway,Females,From 35 to 44 years,59.2
+Norway,Females,From 45 to 64 years,64.0
+Norway,Females,65 years or over,68.5
+Turkey,Males,From 15 to 24 years,23.8
+Turkey,Males,From 25 to 34 years,33.5
+Turkey,Males,From 35 to 44 years,33.9
+Turkey,Males,From 45 to 64 years,30.5
+Turkey,Males,65 years or over,25.5
+Turkey,Females,From 15 to 24 years,30.1
+Turkey,Females,From 25 to 34 years,36.9
+Turkey,Females,From 35 to 44 years,41.7
+Turkey,Females,From 45 to 64 years,35.3
+Turkey,Females,65 years or over,27.3
